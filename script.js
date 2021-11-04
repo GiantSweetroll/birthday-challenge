@@ -1,4 +1,25 @@
-var isMouseDown = false;
+class GameManager {
+    constructor() {
+        this.isMouseDown = false;
+        this.currentBlowStr = 0;
+        this.maxBlowStr = 100;
+        this.blowStrIncr = 1;
+    }
+
+    increaseBlowStr() {
+        if (this.currentBlowStr < this.maxBlowStr) {
+            this.currentBlowStr += this.blowStrIncr;
+        }
+    }
+
+    decreaseBlowStr() {
+        if (this.currentBlowStr > 0) {
+            this.currentBlowStr -= this.blowStrIncr;
+        }
+    }
+}
+
+let gameManager = new GameManager();
 
 var createScene = function(engine) {
     var scene = new BABYLON.Scene(engine);
@@ -6,11 +27,11 @@ var createScene = function(engine) {
         switch (pointerInfo.type) {
             case BABYLON.PointerEventTypes.POINTERDOWN:
                 console.log("POINTER DOWN");
-                isMouseDown = true;
+                gameManager.isMouseDown = true;
                 break;
             case BABYLON.PointerEventTypes.POINTERUP:
                 console.log("POINTER UP");
-                isMouseDown = false;
+                gameManager.isMouseDown = false;
                 break;
             // case BABYLON.PointerEventTypes.POINTERTAP:
             //     console.log("POINTER TAP");
@@ -66,15 +87,15 @@ var createCamera = function(cake) {
     return camera;
 }
 
-var blowPower = 0;
 var canvas = document.getElementById("render");
 var engine = new BABYLON.Engine(canvas, true);
 var scene = createScene(engine);
 
 engine.runRenderLoop(function() {
-    if (isMouseDown) {
-        blowPower++;
-        console.log(blowPower);
+    if (gameManager.isMouseDown) {
+        gameManager.increaseBlowStr();
+    } else {
+        gameManager.decreaseBlowStr();
     }
 
     scene.render();
