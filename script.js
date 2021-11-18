@@ -19,6 +19,15 @@ class GameManager {
     }
 }
 
+/**
+ * Returns a random number between min (inclusive) and max (exclusive)
+ * 
+ * From: https://stackoverflow.com/questions/1527803/generating-random-whole-numbers-in-javascript-in-a-specific-range
+ */
+ function getRandomArbitrary(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
 let gameManager = new GameManager();
 
 var createScene = function(engine) {
@@ -26,11 +35,11 @@ var createScene = function(engine) {
     scene.onPointerObservable.add((pointerInfo) => {
         switch (pointerInfo.type) {
             case BABYLON.PointerEventTypes.POINTERDOWN:
-                console.log("POINTER DOWN");
+                // console.log("POINTER DOWN");
                 gameManager.isMouseDown = true;
                 break;
             case BABYLON.PointerEventTypes.POINTERUP:
-                console.log("POINTER UP");
+                // console.log("POINTER UP");
                 gameManager.isMouseDown = false;
                 break;
             // case BABYLON.PointerEventTypes.POINTERTAP:
@@ -49,10 +58,12 @@ var createScene = function(engine) {
     //     function(newMeshes) {
     //     }
     // );
-    var box = BABYLON.Mesh.CreateBox("Box", 1.0, scene);
-    box.position = BABYLON.Vector3.Zero();
+    var cake = BABYLON.Mesh.CreateBox("FakeCake", 1.0, scene);
+    cake.position = BABYLON.Vector3.Zero();
 
-    var camera = createCamera(box);
+    candles = createCandles(cake, 15, scene);
+
+    var camera = createCamera(cake);
 
     var light = new BABYLON.PointLight(
         "pointLight",
@@ -60,9 +71,68 @@ var createScene = function(engine) {
         scene
     );
     light.parent = camera;
-    light.intensity = 1.5;
+    light.intensity = 2.5;
 
     return scene;
+}
+
+/**
+ * Creates n amount of candles on top of the cake
+ * 
+ * @param {Mesh} cake 
+ * @param {float} count 
+ * @param {Scene} scene 
+ */
+var createCandles = function(cake, count, scene) {
+    cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
+
+    const candles = [];
+    const padding = 0.001;
+
+    for (i = 0; i < count; i++) {
+        var candle = BABYLON.Mesh.CreateBox("Candle" + i, 1, scene);
+        candles[i] = candle;
+
+        candle.showBoundingBox = true;
+        candle.scaling = new BABYLON.Vector3(0.1, 0.25, 0.1);
+        candleDims = candle.getBoundingInfo().boundingBox.extendSize;
+
+        minBoundaries = new BABYLON.Vector3(
+            cakeDims.x - candle.scaling.x/2 - padding, 
+            candleDims.y + candle.scaling.y/2, 
+            cakeDims.z - candle.scaling.z/2 - padding
+        )
+        maxBoundaries = new BABYLON.Vector3(
+            padding + candle.scaling.x/2 - cakeDims.x, 
+            candleDims.y + candle.scaling.y/2, 
+            padding + candle.scaling.z/2 - cakeDims.z
+        )
+
+        collisionCheck:
+        while (true) {
+            candle.position = new BABYLON.Vector3(
+                getRandomArbitrary(minBoundaries.x, maxBoundaries.x), 
+                getRandomArbitrary(minBoundaries.y, maxBoundaries.y), 
+                getRandomArbitrary(minBoundaries.z, maxBoundaries.z)
+            );
+            candle.computeWorldMatrix();
+
+            // Check for collision
+            for (a = 0; a < candles.length; a++) {
+                c = candles[a];
+                if (c.name != candle.name) {
+                    if (candle.intersectsMesh(c, false)) {
+                        console.log('Collision!');
+                        // Randomize the candle position again
+                        continue collisionCheck;
+                    }
+                }
+            }
+            break;
+        }
+    }
+
+    return candles;
 }
 
 var createCamera = function(cake) {
@@ -87,11 +157,15 @@ var createCamera = function(cake) {
     return camera;
 }
 
+
+
+// Main Process
 var canvas = document.getElementById("render");
 var engine = new BABYLON.Engine(canvas, true);
 var scene = createScene(engine);
 
 engine.runRenderLoop(function() {
+    // console.log(gameManager.currentBlowStr);
     if (gameManager.isMouseDown) {
         gameManager.increaseBlowStr();
     } else {
