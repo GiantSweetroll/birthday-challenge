@@ -4,6 +4,7 @@ class GameManager {
         this.currentBlowStr = 0;
         this.maxBlowStr = 100;
         this.blowStrIncr = 1;
+        this.blowSlider = null;
     }
 
     increaseBlowStr() {
@@ -24,14 +25,23 @@ class GameManager {
  * 
  * From: https://stackoverflow.com/questions/1527803/generating-random-whole-numbers-in-javascript-in-a-specific-range
  */
- function getRandomArbitrary(min, max) {
+function getRandomArbitrary(min, max) {
     return Math.random() * (max - min) + min;
 }
 
-let gameManager = new GameManager();
-
-var createScene = function(engine) {
+var createScene = async function (engine, canvas, gameManager) {
     var scene = new BABYLON.Scene(engine);
+
+    // Load GUI
+    let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("GUI", true, scene);
+    let loadedGUI = await advancedTexture.parseFromSnippetAsync("#YXK7SU#3");
+
+    let blowSlider = advancedTexture.getControlByName("BlowSlider");
+    blowSlider.displayThumb = false;
+    blowSlider.value = 0;
+
+    gameManager.blowSlider = blowSlider;
+
     scene.onPointerObservable.add((pointerInfo) => {
         switch (pointerInfo.type) {
             case BABYLON.PointerEventTypes.POINTERDOWN:
@@ -61,17 +71,21 @@ var createScene = function(engine) {
     var cake = BABYLON.Mesh.CreateBox("FakeCake", 1.0, scene);
     cake.position = BABYLON.Vector3.Zero();
 
-    candles = createCandles(cake, 15, scene);
+    candles = createCandles(cake, 10, scene);
 
-    var camera = createCamera(cake);
+    var camera = createCamera(cake, scene, canvas);
 
     var light = new BABYLON.PointLight(
         "pointLight",
         new BABYLON.Vector3(0, 20, 0),
         scene
     );
-    light.parent = camera;
-    light.intensity = 2.5;
+    // light.parent = camera;
+    // light.intensity = 2.5;
+
+    scene.registerBeforeRender(function () {
+        light.position = camera.position;
+    });
 
     return scene;
 }
@@ -83,7 +97,7 @@ var createScene = function(engine) {
  * @param {float} count 
  * @param {Scene} scene 
  */
-var createCandles = function(cake, count, scene) {
+var createCandles = function (cake, count, scene) {
     cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
 
     const candles = [];
@@ -98,21 +112,21 @@ var createCandles = function(cake, count, scene) {
         candleDims = candle.getBoundingInfo().boundingBox.extendSize;
 
         minBoundaries = new BABYLON.Vector3(
-            cakeDims.x - candle.scaling.x/2 - padding, 
-            candleDims.y + candle.scaling.y/2, 
-            cakeDims.z - candle.scaling.z/2 - padding
+            cakeDims.x - candle.scaling.x / 2 - padding,
+            candleDims.y + candle.scaling.y / 2,
+            cakeDims.z - candle.scaling.z / 2 - padding
         )
         maxBoundaries = new BABYLON.Vector3(
-            padding + candle.scaling.x/2 - cakeDims.x, 
-            candleDims.y + candle.scaling.y/2, 
-            padding + candle.scaling.z/2 - cakeDims.z
+            padding + candle.scaling.x / 2 - cakeDims.x,
+            candleDims.y + candle.scaling.y / 2,
+            padding + candle.scaling.z / 2 - cakeDims.z
         )
 
         collisionCheck:
         while (true) {
             candle.position = new BABYLON.Vector3(
-                getRandomArbitrary(minBoundaries.x, maxBoundaries.x), 
-                getRandomArbitrary(minBoundaries.y, maxBoundaries.y), 
+                getRandomArbitrary(minBoundaries.x, maxBoundaries.x),
+                getRandomArbitrary(minBoundaries.y, maxBoundaries.y),
                 getRandomArbitrary(minBoundaries.z, maxBoundaries.z)
             );
             candle.computeWorldMatrix();
@@ -135,7 +149,7 @@ var createCandles = function(cake, count, scene) {
     return candles;
 }
 
-var createCamera = function(cake) {
+var createCamera = function (cake, scene, canvas) {
 
     var camera = new BABYLON.ArcRotateCamera(
         "camera",
@@ -157,23 +171,27 @@ var createCamera = function(cake) {
     return camera;
 }
 
+var main = async function () {
+    // Main Process
+    let gameManager = new GameManager();
+    var canvas = document.getElementById("render");
+    var engine = new BABYLON.Engine(canvas, true);
+    var scene = await createScene(engine, canvas, gameManager);
 
+    engine.runRenderLoop(function () {
+        // console.log(gameManager.currentBlowStr);
+        if (gameManager.isMouseDown) {
+            gameManager.increaseBlowStr();
+        } else {
+            gameManager.decreaseBlowStr();
+        }
+        gameManager.blowSlider.value = gameManager.currentBlowStr;
 
-// Main Process
-var canvas = document.getElementById("render");
-var engine = new BABYLON.Engine(canvas, true);
-var scene = createScene(engine);
+        scene.render();
+    });
+    window.addEventListener("resize", function () {
+        engine.resize();
+    });
+}
 
-engine.runRenderLoop(function() {
-    // console.log(gameManager.currentBlowStr);
-    if (gameManager.isMouseDown) {
-        gameManager.increaseBlowStr();
-    } else {
-        gameManager.decreaseBlowStr();
-    }
-
-    scene.render();
-});
-window.addEventListener("resize", function() {
-    engine.resize();
-});
+main();
