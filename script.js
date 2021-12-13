@@ -6,6 +6,7 @@ class GameManager {
         this.blowStrIncr = 1;
         this.blowSlider = null;
         this.gameDuration = gameDuration;
+        this.blowerPos = BABYLON.Vector3.Zero();
     }
 
     increaseBlowStr() {
@@ -73,6 +74,18 @@ function convertTimeToString(seconds) {
     return minutes + ':' + sec;
 }
 
+/**
+ * Calculates the position of the blower.
+ * 
+ * @param {Mesh} cake 
+ * @param {number} mousex 
+ * @param {number} mousey 
+ */
+function moveBlower(blower, cake, mousex, mousey) {
+    cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
+    blower.position = new BABYLON.Vector3(2, mousey, 0);
+}
+
 var createScene = async function (engine, canvas, gameManager) {
     var scene = new BABYLON.Scene(engine);
 
@@ -90,12 +103,18 @@ var createScene = async function (engine, canvas, gameManager) {
 
     gameManager.blowSlider = blowSlider;
 
+    var blower = BABYLON.Mesh.CreateBox("Blower", 0.25, scene);
+    blower.isPickable = false;
+    blower.position = new BABYLON.Vector3(2, 1, 0);
 
     scene.onPointerObservable.add((pointerInfo) => {
         switch (pointerInfo.type) {
             case BABYLON.PointerEventTypes.POINTERDOWN:
                 // console.log("POINTER DOWN");
                 gameManager.isMouseDown = true;
+                var mousePos = new BABYLON.Vector2(scene.pointerX, pointerInfo.event.y);
+                console.log(mousePos)
+                moveBlower(blower, cake, pointerInfo.event.x, pointerInfo.event.y);
                 break;
             case BABYLON.PointerEventTypes.POINTERUP:
                 // console.log("POINTER UP");
@@ -230,14 +249,15 @@ var createCamera = function (cake, scene, canvas) {
 
     var camera = new BABYLON.ArcRotateCamera(
         "camera",
-        BABYLON.Tools.ToRadians(40),
+        // BABYLON.Tools.ToRadians(40),
+        BABYLON.Tools.ToRadians(0),
         BABYLON.Tools.ToRadians(90),
         5.0,       // Radius
         cake.position,
         scene
     );
     camera.position.y -= 3;
-    camera.attachControl(canvas, true);
+    // camera.attachControl(canvas, true);
 
     // Add controls
     // camera.keysUp.push(87);     // W
