@@ -96,16 +96,19 @@ function blow(blower, cake, camera, scene) {
     // Cast a ray to the cake
     var origin = blower.position;
 
+    // Initialize the ray direction
     var blowPosition = new BABYLON.Vector3(cake.position.x, cake.position.y, cake.position.z);
     blowPosition.y += cakeDims.y;
-
     var direction = blowPosition.subtract(origin);
     direction = BABYLON.Vector3.Normalize(direction);
 
+    // Length of the ray
     var length = camera.radius;
 
+    // Create picker ray
     var ray = new BABYLON.Ray(origin, direction, length)
 
+    // Create visual aid for the ray
     var rayHelper = new BABYLON.RayHelper(ray);
     rayHelper.show(scene);
 
