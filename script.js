@@ -77,13 +77,49 @@ function convertTimeToString(seconds) {
 /**
  * Calculates the position of the blower.
  * 
- * @param {Mesh} cake 
+ * @param {Mesh} blower
  * @param {number} mousex 
- * @param {number} mousey 
+ * @param {number} mousey
+ * @param {Scene} scene 
  */
-function moveBlower(blower, cake, mousex, mousey) {
+function moveBlower(blower, mousex, mousey, scene) {
+    // Cast a ray to mouse position
+    var pickResult = scene.pick(mousex, mousey);
+    // console.log(pickResult.ray.origin.x + ', ' + pickResult.ray.origin.y + ', ' + pickResult.ray.origin.z);
+
+    // Place blower at the place of the ray origin.
+    blower.position = pickResult.ray.origin;
+}
+
+function blow(blower, cake, camera, scene) {
     cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
-    blower.position = new BABYLON.Vector3(2, mousey, 0);
+    // Cast a ray to the cake
+    var origin = blower.position;
+
+    var blowPosition = new BABYLON.Vector3(cake.position.x, cake.position.y, cake.position.z);
+    blowPosition.y += cakeDims.y;
+
+    var direction = blowPosition.subtract(origin);
+    direction = BABYLON.Vector3.Normalize(direction);
+
+    var length = camera.radius;
+
+    var ray = new BABYLON.Ray(origin, direction, length)
+
+    var rayHelper = new BABYLON.RayHelper(ray);
+    rayHelper.show(scene);
+
+    // Pick mesh
+    var hit = scene.pickWithRay(ray);
+    if (hit.pickedMesh) {
+        console.log(hit.pickedMesh.name);
+    }
+}
+
+function vecToLocal(vector, mesh){
+    var m = mesh.getWorldMatrix();
+    var v = BABYLON.Vector3.TransformCoordinates(vector, m);
+    return v;		 
 }
 
 var createScene = async function (engine, canvas, gameManager) {
@@ -112,9 +148,7 @@ var createScene = async function (engine, canvas, gameManager) {
             case BABYLON.PointerEventTypes.POINTERDOWN:
                 // console.log("POINTER DOWN");
                 gameManager.isMouseDown = true;
-                var mousePos = new BABYLON.Vector2(scene.pointerX, pointerInfo.event.y);
-                console.log(mousePos)
-                moveBlower(blower, cake, pointerInfo.event.x, pointerInfo.event.y);
+                moveBlower(blower, scene.pointerX, scene.pointerY, scene);
                 break;
             case BABYLON.PointerEventTypes.POINTERUP:
                 // console.log("POINTER UP");
@@ -126,6 +160,8 @@ var createScene = async function (engine, canvas, gameManager) {
                 if (pickedMesh != null) {
                     console.log(pickedMesh.name);
                 }
+
+                blow(blower, cake, camera, scene);
 
                 break;
             // case BABYLON.PointerEventTypes.POINTERTAP:
@@ -158,7 +194,7 @@ var createScene = async function (engine, canvas, gameManager) {
         scene
     );
     // light.parent = camera;
-    // light.intensity = 2.5;
+    light.intensity = 0.5;
 
     scene.registerBeforeRender(function () {
         light.position = camera.position;
@@ -246,7 +282,6 @@ var createCandles = function (cake, count, scene) {
 }
 
 var createCamera = function (cake, scene, canvas) {
-
     var camera = new BABYLON.ArcRotateCamera(
         "camera",
         // BABYLON.Tools.ToRadians(40),
@@ -257,7 +292,7 @@ var createCamera = function (cake, scene, canvas) {
         scene
     );
     camera.position.y -= 3;
-    // camera.attachControl(canvas, true);
+    camera.attachControl(canvas, true);
 
     // Add controls
     // camera.keysUp.push(87);     // W
