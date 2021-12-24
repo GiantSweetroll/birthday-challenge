@@ -116,7 +116,9 @@ function blow(blower, cake, camera, scene) {
     // Pick mesh
     var hit = scene.pickWithRay(ray);
     if (hit.pickedMesh) {
-        console.log(hit.pickedMesh.name);
+        let meshKey = hit.pickedMesh.name.substring(0, 7);
+        console.log(meshKey);
+        // TODO: Reduce candle threshold
     }
 }
 
@@ -158,12 +160,13 @@ var createScene = async function (engine, canvas, gameManager) {
                 // console.log("POINTER UP");
                 gameManager.isMouseDown = false;
 
-                pickingInfo = scene.pick(pointerInfo.event.x, pointerInfo.event.y);
-                pickedMesh = pickingInfo.pickedMesh;
+                // pickingInfo = scene.pick(pointerInfo.event.x, pointerInfo.event.y);
+                // pickedMesh = pickingInfo.pickedMesh;
                 
-                if (pickedMesh != null) {
-                    console.log(pickedMesh.name);
-                }
+                // if (pickedMesh != null) {
+                //     let meshKey = pickedMesh.name.substring(0, 7);
+                //     console.log(meshKey);
+                // }
 
                 blow(blower, cake, camera, scene);
 
@@ -321,12 +324,13 @@ var main = async function () {
                     material.diffuseTexture = new BABYLON.Texture("./assets/models/candle_colors/" + num + ".jpg", scene);
                     mesh.material = material;
                     mesh.name = name + mesh.name.substring(7)
-                    mesh.isPickable = false;
+                    mesh.isPickable = true;
                 } else if (mesh.name == "Fuse2_Circle.007" || mesh.name == "Fuse2_Circle.007_Material.007") {
                     mesh.name = "Fuse" + a + mesh.name.substring(5);
                     mesh.isPickable = false;
                 } else {
                     mesh.name = name;
+                    mesh.isPickable = true;
                 }
             }
 
