@@ -188,8 +188,6 @@ var createScene = async function (engine, canvas, gameManager) {
     cake.position = BABYLON.Vector3.Zero();
     cake.isPickable = false;
 
-    // candles = createCandles(cake, 10, scene);
-
     var camera = createCamera(cake, scene, canvas);
 
     var light = new BABYLON.PointLight(
@@ -218,73 +216,6 @@ var createScene = async function (engine, canvas, gameManager) {
     return scene;
 }
 
-/**
- * Creates n amount of candles on top of the cake
- * 
- * @param {Mesh} cake 
- * @param {float} count 
- * @param {Scene} scene 
- */
-var createCandles = function (cake, count, scene) {
-    cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
-
-    const candles = [];
-    const padding = 0.001;
-
-    for (i = 0; i < count; i++) {
-        var candle = BABYLON.Mesh.CreateBox("Candle" + i, 1, scene);
-        var candleObj = new Candle(candle.name, candle);
-        candles[i] = candleObj;
-
-        // Candle material
-        var material = new BABYLON.StandardMaterial("candleMat", scene);
-        material.diffuseColor = new BABYLON.Color3(1, 1, 1);
-
-        // candle.showBoundingBox = true;
-        candle.material = material;
-        candle.edgesColor = new BABYLON.Color3(125, 122, 234);
-        candle.isPickable = true;
-        candle.scaling = new BABYLON.Vector3(0.1, 0.25, 0.1);
-        candleDims = candle.getBoundingInfo().boundingBox.extendSize;
-
-        minBoundaries = new BABYLON.Vector3(
-            cakeDims.x - candle.scaling.x / 2 - padding,
-            candleDims.y + candle.scaling.y / 2,
-            cakeDims.z - candle.scaling.z / 2 - padding
-        )
-        maxBoundaries = new BABYLON.Vector3(
-            padding + candle.scaling.x / 2 - cakeDims.x,
-            candleDims.y + candle.scaling.y / 2,
-            padding + candle.scaling.z / 2 - cakeDims.z
-        )
-
-        collisionCheck:
-        while (true) {
-            candle.position = new BABYLON.Vector3(
-                getRandomArbitrary(minBoundaries.x, maxBoundaries.x),
-                getRandomArbitrary(minBoundaries.y, maxBoundaries.y),
-                getRandomArbitrary(minBoundaries.z, maxBoundaries.z)
-            );
-            candle.computeWorldMatrix();
-
-            // Check for collision
-            for (a = 0; a < candles.length; a++) {
-                c = candles[a].meshes;
-                if (c.name != candle.name) {
-                    if (candle.intersectsMesh(c, false)) {
-                        console.log('Collision!');
-                        // Randomize the candle position again
-                        continue collisionCheck;
-                    }
-                }
-            }
-            break;
-        }
-    }
-
-    return candles;
-}
-
 var createCamera = function (cake, scene, canvas) {
     var camera = new BABYLON.ArcRotateCamera(
         "camera",
@@ -305,6 +236,60 @@ var createCamera = function (cake, scene, canvas) {
     camera.keysRight.push(68);  // D
 
     return camera;
+}
+
+/**
+ * Setup the position of the candles (randomly placed) on top of the cake
+ * @param {Mesh} cake - The mesh of the cake model 
+ * @param {dict} candles -  A dictionary of Candle objects 
+ * @param {Scene} scene - Babylon Scene object
+ */
+var positionCandles = function(cake, candles, scene) {
+    const padding = 0.05;
+    for (var key in candles) {
+        var candle = scene.getMeshByName(key + "_Circle.008_Material.006");
+        // candle.showBoundingBox = true;
+        // candle.scaling = new BABYLON.Vector3(0.1, 0.25, 0.1);
+        // candleDims = candle.getBoundingInfo().boundingBox.extendSize;
+
+        minBoundaries = new BABYLON.Vector3(
+            0 - cake.scaling.x/4 - candle.scaling.x / 2 + padding,
+            0 - candle.scaling.y/2,
+            0 - cake.scaling.z/4 - candle.scaling.z / 2 + padding
+        )
+        maxBoundaries = new BABYLON.Vector3(
+            0 + padding - candle.scaling.x / 2 + cake.scaling.x/2,
+            0 - candle.scaling.y/2,
+            0 + padding - candle.scaling.z / 2 + cake.scaling.z/2
+        )
+
+        collisionCheck:
+        while (true) {
+            // Set position of meshes
+            var newPos = new BABYLON.Vector3(
+                getRandomArbitrary(minBoundaries.x, maxBoundaries.x),
+                getRandomArbitrary(minBoundaries.y, maxBoundaries.y),
+                getRandomArbitrary(minBoundaries.z, maxBoundaries.z)
+            );
+            candles[key].meshes.forEach(function(value) {
+                value.position = newPos;
+                value.computeWorldMatrix();
+            });
+
+            // Check for collision
+            for (var key2 in candles) {
+                c = scene.getMeshByName(key2 + "_Circle.008_Material.006");
+                if (c.name != candle.name) {
+                    if (candle.intersectsMesh(c, false)) {
+                        console.log('Collision!');      // TODO: Remove during production phase
+                        // Randomize the candle position again
+                        continue collisionCheck;
+                    }
+                }
+            }
+            break;
+        }
+    }
 }
 
 var main = async function () {
@@ -360,53 +345,9 @@ var main = async function () {
         // console.log(tasks);
         // Place candles
         var cake = scene.getMeshByName("FakeCake");     // TODO: Replace with real cake
-        cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
+        // cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
 
-        const padding = 0.05;
-        for (var key in candles) {
-            var candle = scene.getMeshByName(key + "_Circle.008_Material.006");
-            // candle.showBoundingBox = true;
-            // candle.scaling = new BABYLON.Vector3(0.1, 0.25, 0.1);
-            candleDims = candle.getBoundingInfo().boundingBox.extendSize;
-
-            minBoundaries = new BABYLON.Vector3(
-                0 - cake.scaling.x/4 - candle.scaling.x / 2 + padding,
-                0 - candle.scaling.y/2,
-                0 - cake.scaling.z/4 - candle.scaling.z / 2 + padding
-            )
-            maxBoundaries = new BABYLON.Vector3(
-                0 + padding - candle.scaling.x / 2 + cake.scaling.x/2,
-                0 - candle.scaling.y/2,
-                0 + padding - candle.scaling.z / 2 + cake.scaling.z/2
-            )
-
-            collisionCheck:
-            while (true) {
-                // Set position of meshes
-                var newPos = new BABYLON.Vector3(
-                    getRandomArbitrary(minBoundaries.x, maxBoundaries.x),
-                    getRandomArbitrary(minBoundaries.y, maxBoundaries.y),
-                    getRandomArbitrary(minBoundaries.z, maxBoundaries.z)
-                );
-                candles[key].meshes.forEach(function(value) {
-                    value.position = newPos;
-                    value.computeWorldMatrix();
-                });
-
-                // Check for collision
-                for (var key2 in candles) {
-                    c = scene.getMeshByName(key2 + "_Circle.008_Material.006");
-                    if (c.name != candle.name) {
-                        if (candle.intersectsMesh(c, false)) {
-                            console.log('Collision!');
-                            // Randomize the candle position again
-                            continue collisionCheck;
-                        }
-                    }
-                }
-                break;
-            }
-        }
+        positionCandles(cake, candles, scene);
 
         // Run engine loop
         engine.runRenderLoop(function () {
