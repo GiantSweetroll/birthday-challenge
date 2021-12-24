@@ -23,12 +23,13 @@ class GameManager {
 }
 
 class Candle {
-    constructor(candleMesh, maxThreshold = 100) {
+    constructor(name, meshes, maxThreshold = 100) {
         this.isLit = true;
         this.maxThreshold = maxThreshold;
         this.currentStrength = this.maxThreshold;
         this.regenRate = 0.1;      // Increases the candle strength by this value every frame
-        this.mesh = candleMesh;
+        this.meshes = meshes;
+        this.name = name;
     }
 
     blow(blowStr) {
@@ -187,7 +188,7 @@ var createScene = async function (engine, canvas, gameManager) {
     cake.position = BABYLON.Vector3.Zero();
     cake.isPickable = false;
 
-    candles = createCandles(cake, 10, scene);
+    // candles = createCandles(cake, 10, scene);
 
     var camera = createCamera(cake, scene, canvas);
 
@@ -232,7 +233,7 @@ var createCandles = function (cake, count, scene) {
 
     for (i = 0; i < count; i++) {
         var candle = BABYLON.Mesh.CreateBox("Candle" + i, 1, scene);
-        var candleObj = new Candle(candle);
+        var candleObj = new Candle(candle.name, candle);
         candles[i] = candleObj;
 
         // Candle material
@@ -268,7 +269,7 @@ var createCandles = function (cake, count, scene) {
 
             // Check for collision
             for (a = 0; a < candles.length; a++) {
-                c = candles[a].mesh;
+                c = candles[a].meshes;
                 if (c.name != candle.name) {
                     if (candle.intersectsMesh(c, false)) {
                         console.log('Collision!');
@@ -311,27 +312,103 @@ var main = async function () {
     let gameManager = new GameManager(gameDuration = 300);
     var canvas = document.getElementById("render");
     var engine = new BABYLON.Engine(canvas, true);
+    var candles = {};
     var scene = await createScene(engine, canvas, gameManager);
 
     // Load meshes
     var assetsManager = new BABYLON.AssetsManager(scene);
-    var candleTask = assetsManager.addMeshTask("candleTask", "", "./assets/models/", "Candle.obj");
+    let candleCount = 10;
 
-    candleTask.onSuccess = function(task) {
-        for (var i=0; i < task.loadedMeshes.length; i++) {
-            var mesh = task.loadedMeshes[i];
-            mesh.position.y = 0;
-            
-            if (mesh.name == "Candle2_Circle.008_Material.006" || mesh.name == "Candle2_Circle.008_Material.008") {
-                var material = new BABYLON.StandardMaterial("material", scene);
-                var num = Math.floor(getRandomArbitrary(0, 6));     // Randomize texture
-                material.diffuseTexture = new BABYLON.Texture("./assets/models/candle_colors/" + num + ".jpg", scene);
-                mesh.material = material;
+    var loadedCandlesCount = 0;
+    for (var a=0; a<candleCount; a++) {
+        var candleTask = assetsManager.addMeshTask("candleTask" + a, "", "./assets/models/", "Candle.obj");
+        candleTask.onSuccess = function(task) {
+            var name = "Candle" + loadedCandlesCount;
+            loadedCandlesCount++;
+
+            for (var i=0; i < task.loadedMeshes.length; i++) {
+                var mesh = task.loadedMeshes[i];
+                // console.log("Name:" + mesh.name);
+                
+                if (mesh.name != "Candle2_Circle.008" || mesh.name == "Fuse2_Circle.007") {
+                    var material = new BABYLON.StandardMaterial("material", scene);
+                    var num = Math.floor(getRandomArbitrary(1, 6));     // Randomize texture
+                    material.diffuseTexture = new BABYLON.Texture("./assets/models/candle_colors/" + num + ".jpg", scene);
+                    mesh.material = material;
+                    mesh.name = name + mesh.name.substring(7)
+                    mesh.isPickable = false;
+                } else if (mesh.name == "Fuse2_Circle.007" || mesh.name == "Fuse2_Circle.007_Material.007") {
+                    mesh.name = "Fuse" + a + mesh.name.substring(5);
+                    mesh.isPickable = false;
+                } else {
+                    mesh.name = name;
+                }
             }
+
+            // Create Candle object
+            var candleObject = new Candle(
+                name,
+                task.loadedMeshes
+            )
+
+            // Add to dictionary
+            candles[name] = candleObject;
         }
     }
 
     assetsManager.onFinish = function(tasks) {
+        // console.log(tasks);
+        // Place candles
+        var cake = scene.getMeshByName("FakeCake");     // TODO: Replace with real cake
+        cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
+
+        const padding = 0.05;
+        for (var key in candles) {
+            var candle = scene.getMeshByName(key + "_Circle.008_Material.006");
+            // candle.showBoundingBox = true;
+            // candle.scaling = new BABYLON.Vector3(0.1, 0.25, 0.1);
+            candleDims = candle.getBoundingInfo().boundingBox.extendSize;
+
+            minBoundaries = new BABYLON.Vector3(
+                0 - cake.scaling.x/4 - candle.scaling.x / 2 + padding,
+                0 - candle.scaling.y/2,
+                0 - cake.scaling.z/4 - candle.scaling.z / 2 + padding
+            )
+            maxBoundaries = new BABYLON.Vector3(
+                0 + padding - candle.scaling.x / 2 + cake.scaling.x/2,
+                0 - candle.scaling.y/2,
+                0 + padding - candle.scaling.z / 2 + cake.scaling.z/2
+            )
+
+            collisionCheck:
+            while (true) {
+                // Set position of meshes
+                var newPos = new BABYLON.Vector3(
+                    getRandomArbitrary(minBoundaries.x, maxBoundaries.x),
+                    getRandomArbitrary(minBoundaries.y, maxBoundaries.y),
+                    getRandomArbitrary(minBoundaries.z, maxBoundaries.z)
+                );
+                candles[key].meshes.forEach(function(value) {
+                    value.position = newPos;
+                    value.computeWorldMatrix();
+                });
+
+                // Check for collision
+                for (var key2 in candles) {
+                    c = scene.getMeshByName(key2 + "_Circle.008_Material.006");
+                    if (c.name != candle.name) {
+                        if (candle.intersectsMesh(c, false)) {
+                            console.log('Collision!');
+                            // Randomize the candle position again
+                            continue collisionCheck;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        // Run engine loop
         engine.runRenderLoop(function () {
             // console.log(gameManager.currentBlowStr);
             if (gameManager.isMouseDown) {
