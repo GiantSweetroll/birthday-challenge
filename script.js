@@ -313,20 +313,42 @@ var main = async function () {
     var engine = new BABYLON.Engine(canvas, true);
     var scene = await createScene(engine, canvas, gameManager);
 
-    engine.runRenderLoop(function () {
-        // console.log(gameManager.currentBlowStr);
-        if (gameManager.isMouseDown) {
-            gameManager.increaseBlowStr();
-        } else {
-            gameManager.decreaseBlowStr();
-        }
-        gameManager.blowSlider.value = gameManager.currentBlowStr;
+    // Load meshes
+    var assetsManager = new BABYLON.AssetsManager(scene);
+    var candleTask = assetsManager.addMeshTask("candleTask", "", "./assets/models/", "Candle.obj");
 
-        scene.render();
-    });
-    window.addEventListener("resize", function () {
-        engine.resize();
-    });
+    candleTask.onSuccess = function(task) {
+        for (var i=0; i < task.loadedMeshes.length; i++) {
+            var mesh = task.loadedMeshes[i];
+            mesh.position.y = 0;
+            
+            if (mesh.name == "Candle2_Circle.008_Material.006" || mesh.name == "Candle2_Circle.008_Material.008") {
+                var material = new BABYLON.StandardMaterial("material", scene);
+                var num = Math.floor(getRandomArbitrary(0, 6));     // Randomize texture
+                material.diffuseTexture = new BABYLON.Texture("./assets/models/candle_colors/" + num + ".jpg", scene);
+                mesh.material = material;
+            }
+        }
+    }
+
+    assetsManager.onFinish = function(tasks) {
+        engine.runRenderLoop(function () {
+            // console.log(gameManager.currentBlowStr);
+            if (gameManager.isMouseDown) {
+                gameManager.increaseBlowStr();
+            } else {
+                gameManager.decreaseBlowStr();
+            }
+            gameManager.blowSlider.value = gameManager.currentBlowStr;
+    
+            scene.render();
+        });
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    }
+
+    assetsManager.load();
 }
 
 main();
