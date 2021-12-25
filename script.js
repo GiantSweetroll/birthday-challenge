@@ -303,10 +303,47 @@ var main = async function () {
     var candles = {};
     var scene = await createScene(engine, canvas, gameManager);
 
-    // Load meshes
+    /// Load meshes
     var assetsManager = new BABYLON.AssetsManager(scene);
-    let candleCount = 10;
 
+    // Load Cake
+    var cakeTask = assetsManager.addMeshTask("cakeTask", "", "./assets/models/", "CakeNoCandle.obj");
+    cakeTask.onSuccess = function(task) {
+        task.loadedMeshes.forEach(function(mesh) {
+            mesh.isPickable = false;
+
+            let name = mesh.name;
+            // Rename meshes
+            if (name.length >= 8 && name.substring(0, 8) == "Cylinder") {
+                if (name.length > 8) {
+                    mesh.name = "CakeMaterial";
+                } else {
+                    mesh.name = "Cake";
+                }
+            } else if (name.length >= 5 && name.substring(0, 5) == "Plane") {
+                if (name.length > 5) {
+                    mesh.name = "FlowersMateriale";
+                } else {
+                    mesh.name = "Flowers";
+                }
+            } else if (name.length >= 13 && name.substring(0, 13) == "Icosphere.001") {
+                if (name.length > 13) {
+                    mesh.name = "BottomCreamMateriale";
+                } else {
+                    mesh.name = "BottomCream";
+                }
+            } else if (name.substring(0, 5) != "Plate") {
+                if (name.length > 9) {
+                    mesh.name = "TopCreamMaterial";
+                } else {
+                    mesh.name = "TopCream";
+                }
+            }
+        });
+    }
+
+    // Load Candles
+    let candleCount = 10;
     var loadedCandlesCount = 0;
     for (var a=0; a<candleCount; a++) {
         var candleTask = assetsManager.addMeshTask("candleTask" + a, "", "./assets/models/", "Candle.obj");
