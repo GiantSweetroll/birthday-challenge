@@ -93,14 +93,14 @@ function moveBlower(blower, mousex, mousey, scene) {
 }
 
 function blow(blower, cake, camera, scene) {
-    cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
+    cakeDims = cake.getBoundingInfo().boundingBox.extendSize.scale(2);
     // Cast a ray to the cake
     var origin = blower.position;
 
     // Initialize the ray direction
-    var blowPosition = new BABYLON.Vector3(cake.position.x, cake.position.y, cake.position.z);
-    blowPosition.y += cakeDims.y;
-    var direction = blowPosition.subtract(origin);
+    var blowTarget = new BABYLON.Vector3(cake.position.x, cake.position.y, cake.position.z);
+    blowTarget.y = 1;
+    var direction = blowTarget.subtract(origin);
     direction = BABYLON.Vector3.Normalize(direction);
 
     // Length of the ray
@@ -159,6 +159,7 @@ var createScene = async function (engine, canvas, gameManager) {
             case BABYLON.PointerEventTypes.POINTERUP:
                 // console.log("POINTER UP");
                 gameManager.isMouseDown = false;
+                var cake = scene.getMeshByName("Cake");
 
                 // pickingInfo = scene.pick(pointerInfo.event.x, pointerInfo.event.y);
                 // pickedMesh = pickingInfo.pickedMesh;
@@ -187,11 +188,11 @@ var createScene = async function (engine, canvas, gameManager) {
     //     function(newMeshes) {
     //     }
     // );
-    var cake = BABYLON.Mesh.CreateBox("FakeCake", 1.0, scene);
-    cake.position = BABYLON.Vector3.Zero();
-    cake.isPickable = false;
+    // var cake = BABYLON.Mesh.CreateBox("FakeCake", 1.0, scene);
+    // cake.position = BABYLON.Vector3.Zero();
+    // cake.isPickable = false;
 
-    var camera = createCamera(cake, scene, canvas);
+    var camera = createCamera(scene, canvas);
 
     var light = new BABYLON.PointLight(
         "pointLight",
@@ -219,17 +220,17 @@ var createScene = async function (engine, canvas, gameManager) {
     return scene;
 }
 
-var createCamera = function (cake, scene, canvas) {
+var createCamera = function (scene, canvas) {
     var camera = new BABYLON.ArcRotateCamera(
         "camera",
         // BABYLON.Tools.ToRadians(40),
         BABYLON.Tools.ToRadians(0),
         BABYLON.Tools.ToRadians(90),
         5.0,       // Radius
-        cake.position,
+        BABYLON.Vector3.Zero(),
         scene
     );
-    camera.position.y -= 3;
+    // camera.position.y -= 3;
     camera.attachControl(canvas, true);
 
     // Add controls
@@ -257,12 +258,14 @@ var positionCandles = function(cake, candles, scene) {
 
         minBoundaries = new BABYLON.Vector3(
             0 - cake.scaling.x/4 - candle.scaling.x / 2 + padding,
-            0 - candle.scaling.y/2,
+            // 0 - candle.scaling.y/2,
+            0,
             0 - cake.scaling.z/4 - candle.scaling.z / 2 + padding
         )
         maxBoundaries = new BABYLON.Vector3(
             0 + padding - candle.scaling.x / 2 + cake.scaling.x/2,
-            0 - candle.scaling.y/2,
+            // 0 - candle.scaling.y/2,
+            0,
             0 + padding - candle.scaling.z / 2 + cake.scaling.z/2
         )
 
@@ -385,9 +388,15 @@ var main = async function () {
     assetsManager.onFinish = function(tasks) {
         // console.log(tasks);
         // Place candles
-        var cake = scene.getMeshByName("FakeCake");     // TODO: Replace with real cake
+        var cake = scene.getMeshByName("Cake");
         // cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
 
+        // Update camera position
+        var camera = scene.activeCamera;
+        camera.target = cake.position;
+        camera.target.y = 1;
+
+        // Position candles
         positionCandles(cake, candles, scene);
 
         // Run engine loop
