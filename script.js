@@ -116,9 +116,11 @@ function blow(blower, cake, camera, scene) {
     // Pick mesh
     var hit = scene.pickWithRay(ray);
     if (hit.pickedMesh) {
-        let meshKey = hit.pickedMesh.name.substring(0, 7);
-        console.log(meshKey);
-        // TODO: Reduce candle threshold
+        if (hit.pickedMesh.name != "CakeMaterial") {
+            let meshKey = hit.pickedMesh.name.substring(0, 7);
+            console.log(meshKey);
+            // TODO: Reduce candle threshold
+        }
     }
 }
 
@@ -148,6 +150,7 @@ var createScene = async function (engine, canvas, gameManager) {
     var blower = BABYLON.Mesh.CreateBox("Blower", 0.25, scene);
     blower.isPickable = false;
     blower.position = new BABYLON.Vector3(2, 1, 0);
+    blower.isVisible = false;
 
     scene.onPointerObservable.add((pointerInfo) => {
         switch (pointerInfo.type) {
@@ -234,10 +237,16 @@ var createCamera = function (scene, canvas) {
     camera.attachControl(canvas, true);
 
     // Add controls
-    // camera.keysUp.push(87);     // W
-    // camera.keysDown.push(83);   // S
+    camera.keysUp.push(87);     // W
+    camera.keysDown.push(83);   // S
     camera.keysLeft.push(65);   // A
     camera.keysRight.push(68);  // D
+    
+    // console.log(camera.inputs.attached);
+    // Deactivate mouse control on camera
+    camera.inputs.attached.pointers.detachControl();
+    // Deactivate mousewheel control
+    camera.inputs.attached.mousewheel.detachControl();
 
     return camera;
 }
@@ -320,6 +329,7 @@ var main = async function () {
             if (name.length >= 8 && name.substring(0, 8) == "Cylinder") {
                 if (name.length > 8) {
                     mesh.name = "CakeMaterial";
+                    mesh.isPickable = true;
                 } else {
                     mesh.name = "Cake";
                 }
