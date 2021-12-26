@@ -133,6 +133,9 @@ function vecToLocal(vector, mesh){
 var createScene = async function (engine, canvas, gameManager) {
     var scene = new BABYLON.Scene(engine);
 
+    // Initialize audio
+    var blowAudio = new BABYLON.Sound("blowAudio", "./assets/sound/blow.wav", scene);
+
     // Load GUI
     let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("GUI", true, scene);
     let loadedGUI = await advancedTexture.parseFromSnippetAsync("#YXK7SU#4");
@@ -173,6 +176,9 @@ var createScene = async function (engine, canvas, gameManager) {
                 // }
 
                 blow(blower, cake, camera, scene);
+
+                // Play blow audio
+                blowAudio.play();
 
                 break;
             // case BABYLON.PointerEventTypes.POINTERTAP:
@@ -408,6 +414,12 @@ var main = async function () {
 
         // Position candles
         positionCandles(cake, candles, scene);
+
+        // Play background music
+        var bgMusic = new BABYLON.Sound("bgMusic", "./assets/sound/happybirthday.ogg", scene, null, {
+            loop: true,
+            autoplay: true,
+        })
 
         // Run engine loop
         engine.runRenderLoop(function () {
