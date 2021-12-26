@@ -266,25 +266,26 @@ var createCamera = function (scene, canvas) {
  * @param {dict} candles -  A dictionary of Candle objects 
  * @param {Scene} scene - Babylon Scene object
  */
-var positionCandles = function(cake, candles, scene) {
-    const padding = 0.05;
+var positionCandles = function(cake, candles, scene, padding = 0.1) {
+    // let cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
+    // cake.showBoundingBox = true;
     for (var key in candles) {
         var candle = scene.getMeshByName(key + "_Circle.008_Material.006");
         // candle.showBoundingBox = true;
         // candle.scaling = new BABYLON.Vector3(0.1, 0.25, 0.1);
-        // candleDims = candle.getBoundingInfo().boundingBox.extendSize;
+        candleDims = candle.getBoundingInfo().boundingBox.extendSize;
 
         minBoundaries = new BABYLON.Vector3(
-            0 - cake.scaling.x/4 - candle.scaling.x / 2 + padding,
+            cake.position.x - cake.scaling.x * (2/5) + padding,
             // 0 - candle.scaling.y/2,
-            0,
-            0 - cake.scaling.z/4 - candle.scaling.z / 2 + padding
+            cake.scaling.y + candleDims.y,
+            cake.position.z - cake.scaling.z * (2/5) + padding
         )
         maxBoundaries = new BABYLON.Vector3(
-            0 + padding - candle.scaling.x / 2 + cake.scaling.x/2,
+            cake.position.x + cake.scaling.x * (2/5) - padding,
             // 0 - candle.scaling.y/2,
-            0,
-            0 + padding - candle.scaling.z / 2 + cake.scaling.z/2
+            cake.scaling.y + candleDims.y,
+            cake.position.z + cake.scaling.z * (2/5) - padding
         )
 
         collisionCheck:
