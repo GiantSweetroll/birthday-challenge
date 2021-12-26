@@ -99,12 +99,14 @@ function blow(blower, cake, camera, scene) {
 
     // Initialize the ray direction
     var blowTarget = new BABYLON.Vector3(cake.position.x, cake.position.y, cake.position.z);
+    blowTarget.x += camera.position.x/2 * -1;
     blowTarget.y = 1;
+    blowTarget.z += camera.position.z/2 * -1;
     var direction = blowTarget.subtract(origin);
     direction = BABYLON.Vector3.Normalize(direction);
 
     // Length of the ray
-    var length = camera.radius;
+    var length = camera.radius + cake.scaling.x/2;
 
     // Create picker ray
     var ray = new BABYLON.Ray(origin, direction, length)
