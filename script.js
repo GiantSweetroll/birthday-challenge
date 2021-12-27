@@ -147,7 +147,7 @@ var createScene = async function (engine, canvas, gameManager) {
 
     // Load GUI
     let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("GUI", true, scene);
-    let loadedGUI = await advancedTexture.parseFromSnippetAsync("#YXK7SU#8");
+    let loadedGUI = await advancedTexture.parseFromSnippetAsync("#YXK7SU#9");
 
     // Control blow slider
     let blowSlider = advancedTexture.getControlByName("BlowSlider");
@@ -468,8 +468,14 @@ var main = async function () {
             var iconsFolder = "./assets/icons/";
             // Manage bg music control
             let musicImage = gui.getControlByName("MusicIcon");
+            let ellipse = gui.getControlByName("Ellipse");
             var musicOn = true;
             musicImage.onPointerDownObservable.add(function(event) {
+                musicOn = !musicOn;
+                bgMusic.setVolume(musicOn? 1 : 0);
+                musicImage.source = musicOn? iconsFolder + "music_on.png" : iconsFolder + "music_off.png";
+            });
+            ellipse.onPointerDownObservable.add(function(event) {
                 musicOn = !musicOn;
                 bgMusic.setVolume(musicOn? 1 : 0);
                 musicImage.source = musicOn? iconsFolder + "music_on.png" : iconsFolder + "music_off.png";
