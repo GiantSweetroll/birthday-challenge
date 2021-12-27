@@ -172,15 +172,15 @@ var createScene = async function (engine, canvas, gameManager) {
                 gameManager.isMouseDown = false;
                 var cake = scene.getMeshByName("Cake");
 
-                // pickingInfo = scene.pick(pointerInfo.event.x, pointerInfo.event.y);
-                // pickedMesh = pickingInfo.pickedMesh;
-                
-                // if (pickedMesh != null) {
-                //     let meshKey = pickedMesh.name.substring(0, 7);
-                //     console.log(meshKey);
-                // }
+                pickingInfo = scene.pick(pointerInfo.event.x, pointerInfo.event.y);
+                pickedMesh = pickingInfo.pickedMesh;
+                if (pickedMesh != null) {
+                    // let meshKey = pickedMesh.name.substring(0, 7);
+                    // console.log(meshKey);
+                    console.log(pickedMesh.name);
+                }
 
-                blow(blower, cake, camera, scene);
+                // blow(blower, cake, camera, scene);
 
                 // Play blow audio
                 blowAudio.play();
@@ -376,8 +376,8 @@ var main = async function () {
                 }
             }
 
-            // Position meshes
-            mesh.position = new BABYLON.Vector3(0, 10, 0);
+            // Position meshes (to be on top of table)
+            mesh.position = new BABYLON.Vector3(3, 5.35, 5);
         });
     }
 
@@ -423,9 +423,15 @@ var main = async function () {
 
     assetsManager.onFinish = function(tasks) {
         // console.log(tasks);
-        // Place candles
         var cake = scene.getMeshByName("Cake");
         // cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
+
+        // Remove clutter from table
+        // scene.getMeshByName("book_2").dispose();
+        // scene.getMeshByName("book3").dispose();
+        // scene.getMeshByName("book4").dispose();
+        // scene.getMeshByName("mesh_mm1").dispose();
+        scene.getMeshByName("decoration_set_002").dispose();
 
         // Update camera position
         var camera = scene.activeCamera;
