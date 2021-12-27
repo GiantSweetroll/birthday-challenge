@@ -97,16 +97,18 @@ function blow(blower, cake, camera, scene) {
     // Cast a ray to the cake
     var origin = blower.position;
 
-    // Initialize the ray direction
-    var blowTarget = new BABYLON.Vector3(cake.position.x, cake.position.y, cake.position.z);
-    blowTarget.x += camera.position.x/2 * -1;
-    blowTarget.y = 1;
-    blowTarget.z += camera.position.z/2 * -1;
-    var direction = blowTarget.subtract(origin);
-    direction = BABYLON.Vector3.Normalize(direction);
-
     // Length of the ray
     var length = camera.radius + cake.scaling.x/2;
+
+    // Initialize the ray direction
+    console.log("Camera position: " + camera.position);
+    var blowTarget = new BABYLON.Vector3(
+        ((camera.position.x - cake.position.x) * -1) + cake.position.x,
+        cake.position.y,
+        ((camera.position.z - cake.position.z) * -1) + cake.position.z
+    );
+    var direction = blowTarget.subtract(origin);
+    direction = BABYLON.Vector3.Normalize(direction);
 
     // Create picker ray
     var ray = new BABYLON.Ray(origin, direction, length)
@@ -206,13 +208,14 @@ var createScene = async function (engine, canvas, gameManager) {
 
     var camera = createCamera(scene, canvas);
 
-    var light = new BABYLON.PointLight(
-        "pointLight",
-        new BABYLON.Vector3(0, 20, 0),
-        scene
-    );
-    // light.parent = camera;
-    light.intensity = 0.5;
+    // var light = new BABYLON.PointLight(
+    //     "pointLight",
+    //     new BABYLON.Vector3(0, 20, 0),
+    //     scene
+    // );
+    // // light.parent = camera;
+    // light.intensity = 0.5;
+    var light = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(0, 1, 0), scene);
 
     scene.registerBeforeRender(function () {
         light.position = camera.position;
@@ -278,13 +281,13 @@ var positionCandles = function(cake, candles, scene, padding = 0.1) {
         minBoundaries = new BABYLON.Vector3(
             cake.position.x - cake.scaling.x * (2/5) + padding,
             // 0 - candle.scaling.y/2,
-            cake.scaling.y + candleDims.y,
+            cake.position.y + candleDims.y,
             cake.position.z - cake.scaling.z * (2/5) + padding
         )
         maxBoundaries = new BABYLON.Vector3(
             cake.position.x + cake.scaling.x * (2/5) - padding,
             // 0 - candle.scaling.y/2,
-            cake.scaling.y + candleDims.y,
+            cake.position.y + candleDims.y,
             cake.position.z + cake.scaling.z * (2/5) - padding
         )
 
@@ -328,6 +331,16 @@ var main = async function () {
     /// Load meshes
     var assetsManager = new BABYLON.AssetsManager(scene);
 
+    // Load setting
+    var settingTask = assetsManager.addMeshTask("settingTask", "", "./assets/models/apartment/", "apartment-living-room.obj");
+    settingTask.onSuccess = function(task) {
+        task.loadedMeshes.forEach(function(mesh) {
+            // console.log("Mesh name: " + mesh.name);
+            // console.log(mesh);
+            mesh.scaling = new BABYLON.Vector3(10, 10, 10);
+        });a
+    }
+
     // Load Cake
     var cakeTask = assetsManager.addMeshTask("cakeTask", "", "./assets/models/", "CakeNoCandle.obj");
     cakeTask.onSuccess = function(task) {
@@ -362,6 +375,9 @@ var main = async function () {
                     mesh.name = "TopCream";
                 }
             }
+
+            // Position meshes
+            mesh.position = new BABYLON.Vector3(0, 10, 0);
         });
     }
 
@@ -414,7 +430,9 @@ var main = async function () {
         // Update camera position
         var camera = scene.activeCamera;
         camera.target = cake.position;
-        camera.target.y = 1;
+        camera.target.y = cake.position.y + 1;
+        camera.position = cake.position;
+        camera.radius = 5;
 
         // Position candles
         positionCandles(cake, candles, scene);
