@@ -144,7 +144,7 @@ var createScene = async function (engine, canvas, gameManager) {
 
     // Load GUI
     let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("GUI", true, scene);
-    let loadedGUI = await advancedTexture.parseFromSnippetAsync("#YXK7SU#6");
+    let loadedGUI = await advancedTexture.parseFromSnippetAsync("#YXK7SU#8");
 
     // Control blow slider
     let blowSlider = advancedTexture.getControlByName("BlowSlider");
