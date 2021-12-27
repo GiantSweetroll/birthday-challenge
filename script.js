@@ -141,6 +141,9 @@ var createScene = async function (engine, canvas, gameManager) {
 
     // Initialize audio
     var blowAudio = new BABYLON.Sound("blowAudio", "./assets/sound/blow.wav", scene);
+    blowAudio.onEndedObservable = function() {
+        blowAudio.setVolume(1);
+    }
 
     // Load GUI
     let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("GUI", true, scene);
@@ -185,6 +188,7 @@ var createScene = async function (engine, canvas, gameManager) {
                 blow(blower, cake, camera, scene);
 
                 // Play blow audio
+                blowAudio.setVolume((gameManager.currentBlowStr / 20) - 1);       
                 blowAudio.play();
 
                 break;
