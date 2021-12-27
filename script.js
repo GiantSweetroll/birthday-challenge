@@ -172,15 +172,15 @@ var createScene = async function (engine, canvas, gameManager) {
                 gameManager.isMouseDown = false;
                 var cake = scene.getMeshByName("Cake");
 
-                pickingInfo = scene.pick(pointerInfo.event.x, pointerInfo.event.y);
-                pickedMesh = pickingInfo.pickedMesh;
-                if (pickedMesh != null) {
-                    // let meshKey = pickedMesh.name.substring(0, 7);
-                    // console.log(meshKey);
-                    console.log(pickedMesh.name);
-                }
+                // pickingInfo = scene.pick(pointerInfo.event.x, pointerInfo.event.y);
+                // pickedMesh = pickingInfo.pickedMesh;
+                // if (pickedMesh != null) {
+                //     // let meshKey = pickedMesh.name.substring(0, 7);
+                //     // console.log(meshKey);
+                //     console.log(pickedMesh.name);
+                // }
 
-                // blow(blower, cake, camera, scene);
+                blow(blower, cake, camera, scene);
 
                 // Play blow audio
                 blowAudio.play();
