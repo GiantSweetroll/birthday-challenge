@@ -93,7 +93,7 @@ function moveBlower(blower, mousex, mousey, scene) {
 }
 
 function blow(blower, cake, camera, scene) {
-    cakeDims = cake.getBoundingInfo().boundingBox.extendSize.scale(2);
+    // cakeDims = cake.getBoundingInfo().boundingBox.extendSize.scale(2);
     // Cast a ray to the cake
     var origin = blower.position;
 
@@ -101,10 +101,10 @@ function blow(blower, cake, camera, scene) {
     var length = camera.radius + cake.scaling.x/2;
 
     // Initialize the ray direction
-    console.log("Camera position: " + camera.position);
+    // console.log("Camera position: " + camera.position);
     var blowTarget = new BABYLON.Vector3(
         ((camera.position.x - cake.position.x) * -1) + cake.position.x,
-        cake.position.y,
+        ((camera.position.y - cake.position.y) * -1) + cake.position.y + 0.25,
         ((camera.position.z - cake.position.z) * -1) + cake.position.z
     );
     var direction = blowTarget.subtract(origin);
@@ -136,6 +136,8 @@ function vecToLocal(vector, mesh){
 
 var createScene = async function (engine, canvas, gameManager) {
     var scene = new BABYLON.Scene(engine);
+    scene.gravity = new BABYLON.Vector3(0, -0.1, 0);
+    scene.collisionsEnabled = true;
 
     // Initialize audio
     var blowAudio = new BABYLON.Sound("blowAudio", "./assets/sound/blow.wav", scene);
@@ -247,6 +249,12 @@ var createCamera = function (scene, canvas) {
     );
     // camera.position.y -= 3;
     camera.attachControl(canvas, true);
+    camera.applyGravity = true;
+    camera.checkCollisions = true;
+
+    // Set the max rotation of the camera vertically
+    camera.upperBetaLimit = BABYLON.Tools.ToRadians(95);
+    camera.lowerBetaLimit = BABYLON.Tools.ToRadians(70);
 
     // Add controls
     camera.keysUp.push(87);     // W
@@ -338,7 +346,8 @@ var main = async function () {
             // console.log("Mesh name: " + mesh.name);
             // console.log(mesh);
             mesh.scaling = new BABYLON.Vector3(10, 10, 10);
-        });a
+            mesh.checkCollisions = true;
+        });
     }
 
     // Load Cake
