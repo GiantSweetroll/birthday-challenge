@@ -368,6 +368,11 @@ var main = async function () {
             mesh.scaling = new BABYLON.Vector3(10, 10, 10);
             mesh.checkCollisions = true;
         });
+
+        var sofaMat = new BABYLON.StandardMaterial("sofaMat", scene);
+        sofaMat.diffuseTexture = new BABYLON.Texture("./assets/models/apartment/fabric_blend.jpg", scene);
+        // sofaMat.bumpTexture = new BABYLON.Texture("./assets/models/apartment/rockwell_bump_normal.png", scene);
+        scene.getMeshByName("Line001").material = sofaMat;
     }
 
     // Load Cake
@@ -375,6 +380,7 @@ var main = async function () {
     cakeTask.onSuccess = function(task) {
         var num = Math.floor(getRandomArbitrary(0, 2));
         let textureName = num == 0? "rFrosting_Vanilla_highres.png" : "juniors-sponge-cake-crust.jpg";
+        let normalTextureName = num == 0? "vanilla_normal.png" : "spongecake_normal.png";
         var transformNode = scene.getTransformNodeByName("cakeRoot");
         task.loadedMeshes.forEach(function(mesh) {
             mesh.isPickable = true;
@@ -384,6 +390,8 @@ var main = async function () {
             if (name.includes("Cylinder")) {
                 var material = new BABYLON.StandardMaterial("cakeMaterial", scene);
                 material.diffuseTexture = new BABYLON.Texture("./assets/models/Cake/textures/" + textureName, scene);
+                material.bumpTexture = new BABYLON.Texture("./assets/models/Cake/textures/" + normalTextureName, scene);
+                material.roughness = 0;
                 mesh.material = material;
 
                 if (name == "Cylinder1") {
@@ -394,11 +402,16 @@ var main = async function () {
             } else {
                 var material = new BABYLON.StandardMaterial("ringMaterial", scene);
                 material.diffuseTexture = new BABYLON.Texture("./assets/models/Cake/textures/istockphoto-496820040-612x612.jpg", scene);
-                mesh.material = material;
+                material.roughness = 0;
 
                 if (name == "Torus2") {
                     mesh.name = "upperCream";
+                } else {
+                    // Don't apply normal maps to the upper cream, as it will turn really dark
+                    material.bumpTexture = new BABYLON.Texture("./assets/models/Cake/chocolate_normal.png", scene);
                 }
+                
+                mesh.material = material;
             }
             
             if (!mesh.parent) {
