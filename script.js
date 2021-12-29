@@ -93,19 +93,20 @@ function moveBlower(blower, mousex, mousey, scene) {
 }
 
 function blow(blower, cake, camera, scene) {
-    // cakeDims = cake.getBoundingInfo().boundingBox.extendSize.scale(2);
+    cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
     // Cast a ray to the cake
-    var origin = blower.position;
+    // var origin = blower.position;
+    var origin = camera.position;
 
     // Length of the ray
-    var length = camera.radius + cake.scaling.x/2;
+    var length = camera.radius * 2;
 
     // Initialize the ray direction
     // console.log("Camera position: " + camera.position);
     var blowTarget = new BABYLON.Vector3(
-        ((camera.position.x - cake.position.x) * -1) + cake.position.x,
-        ((camera.position.y - cake.position.y) * -1) + cake.position.y + 0.25,
-        ((camera.position.z - cake.position.z) * -1) + cake.position.z
+        ((camera.position.x - cake.getAbsolutePosition().x) * -1) + cake.getAbsolutePosition().x,
+        ((camera.position.y - cake.getAbsolutePosition().y) * -1) + cake.getAbsolutePosition().y - cakeDims.y/2,
+        ((camera.position.z - cake.getAbsolutePosition().z) * -1) + cake.getAbsolutePosition().z
     );
     var direction = blowTarget.subtract(origin);
     direction = BABYLON.Vector3.Normalize(direction);
@@ -138,6 +139,9 @@ var createScene = async function (engine, canvas, gameManager) {
     var scene = new BABYLON.Scene(engine);
     scene.gravity = new BABYLON.Vector3(0, -0.1, 0);
     scene.collisionsEnabled = true;
+
+    // Create TransformNode
+    var cakeTransformNode = new BABYLON.TransformNode("cakeRoot", scene);
 
     // Initialize audio
     var blowAudio = new BABYLON.Sound("blowAudio", "./assets/sound/blow.wav", scene);
@@ -175,17 +179,17 @@ var createScene = async function (engine, canvas, gameManager) {
             case BABYLON.PointerEventTypes.POINTERUP:
                 // console.log("POINTER UP");
                 gameManager.isMouseDown = false;
+
                 var cake = scene.getMeshByName("Cake");
+                // blow(blower, cake, camera, scene);
 
-                // pickingInfo = scene.pick(pointerInfo.event.x, pointerInfo.event.y);
-                // pickedMesh = pickingInfo.pickedMesh;
-                // if (pickedMesh != null) {
-                //     // let meshKey = pickedMesh.name.substring(0, 7);
-                //     // console.log(meshKey);
-                //     console.log(pickedMesh.name);
-                // }
-
-                blow(blower, cake, camera, scene);
+                pickingInfo = scene.pick(pointerInfo.event.x, pointerInfo.event.y);
+                pickedMesh = pickingInfo.pickedMesh;
+                if (pickedMesh != null) {
+                    // let meshKey = pickedMesh.name.substring(0, 7);
+                    // console.log(meshKey);
+                    console.log(pickedMesh.name);
+                }
 
                 // Play blow audio
                 blowAudio.setVolume((gameManager.currentBlowStr / 20) - 1);       
@@ -238,6 +242,8 @@ var createScene = async function (engine, canvas, gameManager) {
 
     }, 1000);
 
+    // scene.debugLayer.show();
+
     return scene;
 }
 
@@ -282,34 +288,44 @@ var createCamera = function (scene, canvas) {
  * @param {Scene} scene - Babylon Scene object
  */
 var positionCandles = function(cake, candles, scene, padding = 0.1) {
-    // let cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
-    // cake.showBoundingBox = true;
+    let cakeRoot = scene.getTransformNodeByName("cakeRoot");
+    let upperCream = scene.getMeshByName("upperCream");
+    let upperCreamDims = upperCream.getBoundingInfo().boundingBox.extendSize;
+    upperCreamDims.x *= cakeRoot.scaling.x;
+    upperCreamDims.y *= cakeRoot.scaling.y;
+    upperCreamDims.z *= cakeRoot.scaling.z;
+    // console.log(cakeDims);
+    upperCreamDims.showBoundingBox = true;
+    let cakePosition = upperCream.getAbsolutePosition();
+    // console.log(cakePosition);
+
     for (var key in candles) {
         var candle = scene.getMeshByName(key + "_Circle.008_Material.006");
         // candle.showBoundingBox = true;
         // candle.scaling = new BABYLON.Vector3(0.1, 0.25, 0.1);
         candleDims = candle.getBoundingInfo().boundingBox.extendSize;
 
-        minBoundaries = new BABYLON.Vector3(
-            cake.position.x - cake.scaling.x * (2/5) + padding,
-            // 0 - candle.scaling.y/2,
-            cake.position.y + candleDims.y,
-            cake.position.z - cake.scaling.z * (2/5) + padding
-        )
-        maxBoundaries = new BABYLON.Vector3(
-            cake.position.x + cake.scaling.x * (2/5) - padding,
-            // 0 - candle.scaling.y/2,
-            cake.position.y + candleDims.y,
-            cake.position.z + cake.scaling.z * (2/5) - padding
-        )
+        // minBoundaries = new BABYLON.Vector3(
+        //     cakePosition.x - upperCreamDims.x + padding,
+        //     cakePosition.y + candleDims.y,
+        //     cakePosition.z - upperCreamDims.z + padding
+        // )
+        // maxBoundaries = new BABYLON.Vector3(
+        //     cakePosition.x + upperCreamDims.x - padding,
+        //     cakePosition.y + candleDims.y,
+        //     cakePosition.z + upperCreamDims.z - padding
+        // )
 
         collisionCheck:
         while (true) {
             // Set position of meshes
+            // let r = upperCreamDims.x - padding - candleDims.x;
+            let r = getRandomArbitrary(0, upperCreamDims.x - padding - candleDims.x);
+            let theta = getRandomArbitrary(0, 2 * Math.PI);
             var newPos = new BABYLON.Vector3(
-                getRandomArbitrary(minBoundaries.x, maxBoundaries.x),
-                getRandomArbitrary(minBoundaries.y, maxBoundaries.y),
-                getRandomArbitrary(minBoundaries.z, maxBoundaries.z)
+                r * Math.cos(theta) + cakePosition.x,
+                cakePosition.y + candleDims.y,
+                r * Math.sin(theta) + cakePosition.z
             );
             candles[key].meshes.forEach(function(value) {
                 value.position = newPos;
@@ -323,7 +339,7 @@ var positionCandles = function(cake, candles, scene, padding = 0.1) {
                     if (candle.intersectsMesh(c, false)) {
                         console.log('Collision!');      // TODO: Remove during production phase
                         // Randomize the candle position again
-                        continue collisionCheck;
+                        // continue collisionCheck;
                     }
                 }
             }
@@ -355,43 +371,46 @@ var main = async function () {
     }
 
     // Load Cake
-    var cakeTask = assetsManager.addMeshTask("cakeTask", "", "./assets/models/", "CakeNoCandle.obj");
+    var cakeTask = assetsManager.addMeshTask("cakeTask", "", "./assets/models/Cake/", "rhygu-birthday-cake-no-candle.babylon");
     cakeTask.onSuccess = function(task) {
+        var num = Math.floor(getRandomArbitrary(0, 2));
+        let textureName = num == 0? "rFrosting_Vanilla_highres.png" : "juniors-sponge-cake-crust.jpg";
+        var transformNode = scene.getTransformNodeByName("cakeRoot");
         task.loadedMeshes.forEach(function(mesh) {
-            mesh.isPickable = false;
+            mesh.isPickable = true;
 
             let name = mesh.name;
-            // Rename meshes
-            if (name.length >= 8 && name.substring(0, 8) == "Cylinder") {
-                if (name.length > 8) {
-                    mesh.name = "CakeMaterial";
-                    mesh.isPickable = true;
-                } else {
+            
+            if (name.includes("Cylinder")) {
+                var material = new BABYLON.StandardMaterial("cakeMaterial", scene);
+                material.diffuseTexture = new BABYLON.Texture("./assets/models/Cake/textures/" + textureName, scene);
+                mesh.material = material;
+
+                if (name == "Cylinder1") {
                     mesh.name = "Cake";
+                    // mesh.showBoundingBox = true;
+                    // console.log(mesh.getAbsolutePosition());
                 }
-            } else if (name.length >= 5 && name.substring(0, 5) == "Plane") {
-                if (name.length > 5) {
-                    mesh.name = "FlowersMateriale";
-                } else {
-                    mesh.name = "Flowers";
-                }
-            } else if (name.length >= 13 && name.substring(0, 13) == "Icosphere.001") {
-                if (name.length > 13) {
-                    mesh.name = "BottomCreamMateriale";
-                } else {
-                    mesh.name = "BottomCream";
-                }
-            } else if (name.substring(0, 5) != "Plate") {
-                if (name.length > 9) {
-                    mesh.name = "TopCreamMaterial";
-                } else {
-                    mesh.name = "TopCream";
+            } else {
+                var material = new BABYLON.StandardMaterial("ringMaterial", scene);
+                material.diffuseTexture = new BABYLON.Texture("./assets/models/Cake/textures/istockphoto-496820040-612x612.jpg", scene);
+                mesh.material = material;
+
+                if (name == "Torus2") {
+                    mesh.name = "upperCream";
                 }
             }
-
-            // Position meshes (to be on top of table)
-            mesh.position = new BABYLON.Vector3(3, 5.35, 5);
+            
+            if (!mesh.parent) {
+                mesh.parent = transformNode;
+            }
         });
+
+        // Reduce scale of the mesh
+        transformNode.scaling = new BABYLON.Vector3(0.2, 0.2, 0.2);
+
+        // Position meshes (to be on top of table)
+        transformNode.position = new BABYLON.Vector3(3, 5.75, 5);
     }
 
     // Load Candles
@@ -448,9 +467,9 @@ var main = async function () {
 
         // Update camera position
         var camera = scene.activeCamera;
-        camera.target = cake.position;
-        camera.target.y = cake.position.y + 1;
-        camera.position = cake.position;
+        camera.target = cake.getAbsolutePosition();
+        camera.target.y = cake.getAbsolutePosition().y + 1;
+        camera.position = cake.getAbsolutePosition();
         camera.radius = 5;
 
         // Position candles
