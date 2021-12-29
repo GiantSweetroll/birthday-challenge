@@ -1,0 +1,76 @@
+Exporter version: 2.93.4, Blender version: 2.93.5
+========= Conversion from Blender to Babylon.js =========
+	Scene settings used :
+		Inline textures     :  false
+		Material Type       :  PBR
+		Positions Precision :  4
+		Normals Precision   :  3
+		UVs Precision       :  3
+		Vert Color Precision:  3
+		Mat Weight Precision:  2
+		Keep Z-up r-handed  :  no
+		Texture directory   :  K:\GitHub Repositories\birthday-challenge\assets\models\Cake\
+	Python World class constructor completed
+	processing begun of mesh:  Torus
+		processing begun of material:  fe9494
+		Custom split normals with tangents being used
+		num positions      :  201591
+		num normals        :  201591
+		num tangents       :  806364
+		num uvs            :  403182
+		num uvs2           :  0
+		num colors         :  0
+		num triangles      :  397832
+	processing begun of mesh:  Torus2
+		processing begun of material:  fe9494
+		registered as also a user of material:  fe9494
+		Custom split normals with tangents being used
+		num positions      :  219014
+		num normals        :  219014
+		num tangents       :  876056
+		num uvs            :  438028
+		num uvs2           :  0
+		num colors         :  0
+		num triangles      :  432450
+	processing begun of mesh:  Cylinder
+		processing begun of material:  cecece
+		Custom split normals with tangents being used
+		num positions      :  42000
+		num normals        :  42000
+		num tangents       :  168000
+		num uvs            :  84000
+		num uvs2           :  0
+		num colors         :  0
+		num triangles      :  80400
+	processing begun of mesh:  Torus1
+		processing begun of material:  fe9494
+		registered as also a user of material:  fe9494
+		Custom split normals with tangents being used
+		num positions      :  201591
+		num normals        :  201591
+		num tangents       :  806364
+		num uvs            :  403182
+		num uvs2           :  0
+		num colors         :  0
+		num triangles      :  397832
+	processing begun of camera (UniversalCamera):  Camera
+	processing begun of mesh:  Cylinder1
+		processing begun of material:  cecece
+		registered as also a user of material:  cecece
+		Custom split normals with tangents being used
+		num positions      :  42000
+		num normals        :  42000
+		num tangents       :  168000
+		num uvs            :  84000
+		num uvs2           :  0
+		num colors         :  0
+		num triangles      :  80400
+========= Writing of JSON file started =========
+	writing mesh:  Torus
+	writing mesh:  Torus2
+	writing mesh:  Cylinder
+	writing mesh:  Torus1
+	writing mesh:  Cylinder1
+========= Writing of JSON file completed =========
+========= end of processing =========
+elapsed time:  2 min, 19.2797 secs
