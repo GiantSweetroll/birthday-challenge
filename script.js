@@ -7,6 +7,7 @@ class GameManager {
         this.blowSlider = null;
         this.gameDuration = gameDuration;
         this.blowerPos = BABYLON.Vector3.Zero();
+        this.canBlow = true;
     }
 
     increaseBlowStr() {
@@ -183,17 +184,27 @@ var createScene = async function (engine, canvas, gameManager) {
                 var cake = scene.getMeshByName("Cake");
                 // blow(blower, cake, camera, scene);
 
-                pickingInfo = scene.pick(pointerInfo.event.x, pointerInfo.event.y);
-                pickedMesh = pickingInfo.pickedMesh;
-                if (pickedMesh != null) {
-                    // let meshKey = pickedMesh.name.substring(0, 7);
-                    // console.log(meshKey);
-                    console.log(pickedMesh.name);
-                }
+                if (gameManager.canBlow) {
+                    gameManager.canBlow = false;
 
-                // Play blow audio
-                blowAudio.setVolume((gameManager.currentBlowStr / 20) - 1);       
-                blowAudio.play();
+                    // Play blow audio
+                    blowAudio.setVolume((gameManager.currentBlowStr / 20) - 1);       
+                    blowAudio.play();
+
+                    pickingInfo = scene.pick(pointerInfo.event.x, pointerInfo.event.y);
+                    pickedMesh = pickingInfo.pickedMesh;
+                    if (pickedMesh != null) {
+                        // let meshKey = pickedMesh.name.substring(0, 7);
+                        // console.log(meshKey);
+                        console.log(pickedMesh.name);
+                        if (pickedMesh.name.contains("Candle")) {
+                            let meshKey = hit.pickedMesh.name.substring(0, 7);
+                            console.log(meshKey);
+
+                            // TODO: Reduce candle threshold
+                        }
+                    }
+                }
 
                 break;
             // case BABYLON.PointerEventTypes.POINTERTAP:
@@ -517,12 +528,17 @@ var main = async function () {
         // Run engine loop
         engine.runRenderLoop(function () {
             // console.log(gameManager.currentBlowStr);
-            if (gameManager.isMouseDown) {
+            if (gameManager.isMouseDown && gameManager.canBlow) {
                 gameManager.increaseBlowStr();
             } else {
                 gameManager.decreaseBlowStr();
             }
             gameManager.blowSlider.value = gameManager.currentBlowStr;
+
+            // Can only blow when slider reaches 0 again
+            if (gameManager.currentBlowStr == 0) {
+                gameManager.canBlow = true;
+            }
     
             scene.render();
         });
