@@ -386,6 +386,15 @@ var main = async function () {
         scene.getMeshByName("Line001").material = sofaMat;
     }
 
+    // Load fire
+    var fireTask = assetsManager.addMeshTask("fireTask", "", "./assets/models/", "Fire.glb");
+    fireTask.onSuccess = function(task) {
+        task.loadedMeshes.forEach(function(mesh) {
+            console.log("Fire mesh: " + mesh.name);
+            mesh.position = new BABYLON.Vector3(3, 5.0, 5);
+        });
+    }
+
     // Load Cake
     var cakeTask = assetsManager.addMeshTask("cakeTask", "", "./assets/models/Cake/", "rhygu-birthday-cake-no-candle.babylon");
     cakeTask.onSuccess = function(task) {
