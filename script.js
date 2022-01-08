@@ -1,5 +1,5 @@
 class GameManager {
-    constructor(gameDuration = 300) {
+    constructor(candleCount = 10, gameDuration = 300) {
         this.isMouseDown = false;
         this.currentBlowStr = 0;
         this.maxBlowStr = 100;
@@ -8,6 +8,7 @@ class GameManager {
         this.gameDuration = gameDuration;
         this.blowerPos = BABYLON.Vector3.Zero();
         this.canBlow = true;
+        this.candleCount = candleCount;
     }
 
     increaseBlowStr() {
@@ -24,12 +25,12 @@ class GameManager {
 }
 
 class Candle {
-    constructor(name, meshes, maxThreshold = 100) {
+    constructor(name, meshGroup, maxThreshold = 100) {
         this.isLit = true;
         this.maxThreshold = maxThreshold;
         this.currentStrength = this.maxThreshold;
         this.regenRate = 0.1;      // Increases the candle strength by this value every frame
-        this.meshes = meshes;
+        this.candleMeshGroup = meshGroup;
         this.name = name;
     }
 
@@ -143,6 +144,9 @@ var createScene = async function (engine, canvas, gameManager) {
 
     // Create TransformNode
     var cakeTransformNode = new BABYLON.TransformNode("cakeRoot", scene);
+    for (var i=0; i<gameManager.candleCount; i++) {
+        var candleTransformNode = new BABYLON.TransformNode("candle" + i, scene);
+    }
 
     // Initialize audio
     var blowAudio = new BABYLON.Sound("blowAudio", "./assets/sound/blow.wav", scene);
@@ -197,8 +201,8 @@ var createScene = async function (engine, canvas, gameManager) {
                         // let meshKey = pickedMesh.name.substring(0, 7);
                         // console.log(meshKey);
                         console.log(pickedMesh.name);
-                        if (pickedMesh.name.contains("Candle")) {
-                            let meshKey = hit.pickedMesh.name.substring(0, 7);
+                        if (pickedMesh.name.includes("Candle")) {
+                            let meshKey = pickedMesh.name.substring(0, 7);
                             console.log(meshKey);
 
                             // TODO: Reduce candle threshold
@@ -215,14 +219,6 @@ var createScene = async function (engine, canvas, gameManager) {
 
     engine.enableOfflineSupport = false;
 
-    // var cake = BABYLON.SceneLoader.ImportMesh(
-    //     "", 
-    //     "./assets/models/", 
-    //     "BirthdayCake.obj",
-    //     scene,
-    //     function(newMeshes) {
-    //     }
-    // );
     // var cake = BABYLON.Mesh.CreateBox("FakeCake", 1.0, scene);
     // cake.position = BABYLON.Vector3.Zero();
     // cake.isPickable = false;
@@ -311,10 +307,11 @@ var positionCandles = function(cake, candles, scene, padding = 0.1) {
     // console.log(cakePosition);
 
     for (var key in candles) {
-        var candle = scene.getMeshByName(key + "_Circle.008_Material.006");
+        var candle = scene.getMeshByName(key + '_Material1');
         // candle.showBoundingBox = true;
         // candle.scaling = new BABYLON.Vector3(0.1, 0.25, 0.1);
         candleDims = candle.getBoundingInfo().boundingBox.extendSize;
+        console.log(candleDims);
 
         // minBoundaries = new BABYLON.Vector3(
         //     cakePosition.x - upperCreamDims.x + padding,
@@ -338,16 +335,21 @@ var positionCandles = function(cake, candles, scene, padding = 0.1) {
                 cakePosition.y + candleDims.y,
                 r * Math.sin(theta) + cakePosition.z
             );
-            candles[key].meshes.forEach(function(value) {
-                value.position = newPos;
-                value.computeWorldMatrix();
+            // console.log(candles[key].candleMeshGroup);
+            var transformNode = candles[key].candleMeshGroup;
+            transformNode.position = newPos;
+            transformNode.computeWorldMatrix();
+            // Update position of mesh children
+            transformNode._children.forEach(function(mesh) {
+                mesh.computeWorldMatrix();
             });
+            // console.log(transformNode.name + ': ' + transformNode.position);
 
             // Check for collision
             for (var key2 in candles) {
-                c = scene.getMeshByName(key2 + "_Circle.008_Material.006");
+                c = scene.getMeshByName(key2);
                 if (c.name != candle.name) {
-                    if (candle.intersectsMesh(c, false)) {
+                    if (candle.intersectsMesh(c, true)) {
                         console.log('Collision!');      // TODO: Remove during production phase
                         // Randomize the candle position again
                         // continue collisionCheck;
@@ -361,7 +363,7 @@ var positionCandles = function(cake, candles, scene, padding = 0.1) {
 
 var main = async function () {
     // Main Process
-    let gameManager = new GameManager(gameDuration = 300);
+    let gameManager = new GameManager(candleCount = 10, gameDuration = 300);
     var canvas = document.getElementById("render");
     var engine = new BABYLON.Engine(canvas, true);
     var candles = {};
@@ -389,6 +391,8 @@ var main = async function () {
     // Load fire
     var fireTask = assetsManager.addMeshTask("fireTask", "", "./assets/models/", "Fire.glb");
     fireTask.onSuccess = function(task) {
+        var transformNode = scene.getTransformNodeByName("fireRoot");
+
         task.loadedMeshes.forEach(function(mesh) {
             console.log("Fire mesh: " + mesh.name);
             mesh.position = new BABYLON.Vector3(3, 5.0, 5);
@@ -447,38 +451,42 @@ var main = async function () {
     }
 
     // Load Candles
-    let candleCount = 10;
     var loadedCandlesCount = 0;
-    for (var a=0; a<candleCount; a++) {
+    for (var a=0; a<gameManager.candleCount; a++) {
         var candleTask = assetsManager.addMeshTask("candleTask" + a, "", "./assets/models/", "Candle.obj");
         candleTask.onSuccess = function(task) {
+            var transformNode = scene.getTransformNodeByName("candle" + loadedCandlesCount);
             var name = "Candle" + loadedCandlesCount;
             loadedCandlesCount++;
 
             for (var i=0; i < task.loadedMeshes.length; i++) {
                 var mesh = task.loadedMeshes[i];
-                // console.log("Name:" + mesh.name);
-                
-                if (mesh.name != "Candle2_Circle.008" || mesh.name == "Fuse2_Circle.007") {
+                // console.log("Name: " + mesh.name);
+
+                if (mesh.name.includes('Candle') && mesh.name.includes('Material')) {
                     var material = new BABYLON.StandardMaterial("material", scene);
                     var num = Math.floor(getRandomArbitrary(1, 6));     // Randomize texture
                     material.diffuseTexture = new BABYLON.Texture("./assets/models/candle_colors/" + num + ".jpg", scene);
                     mesh.material = material;
-                    mesh.name = name + mesh.name.substring(7)
-                    mesh.isPickable = true;
-                } else if (mesh.name == "Fuse2_Circle.007" || mesh.name == "Fuse2_Circle.007_Material.007") {
-                    mesh.name = "Fuse" + a + mesh.name.substring(5);
-                    mesh.isPickable = false;
+                    mesh.name = mesh.name.includes('006')? name + '_Material1' : name + '_Material2';
+                } else if (mesh.name.includes('Fuse')) {
+                    mesh.name = name + "_Fuse" + mesh.name.includes('Material')? '_Material' : '';
                 } else {
                     mesh.name = name;
-                    mesh.isPickable = true;
                 }
+
+                if (!mesh.parent) {
+                    mesh.parent = transformNode;
+                }
+
+                // mesh.position = new BABYLON.Vector3(3, 5.8, 5);
             }
 
             // Create Candle object
+            // console.log(transformNode);
             var candleObject = new Candle(
                 name,
-                task.loadedMeshes
+                transformNode
             )
 
             // Add to dictionary
