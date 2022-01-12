@@ -9,7 +9,7 @@ class GameManager {
         this.blowerPos = BABYLON.Vector3.Zero();
         this.canBlow = true;
         this.candleCount = candleCount;
-        this.shadowGenerator = null;
+        this.shadowGenerators = [];
     }
 
     increaseBlowStr() {
@@ -235,14 +235,14 @@ var createScene = async function (engine, canvas, gameManager) {
     // light.intensity = 0.5;
     var hemLight = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(0, 1, 0), scene);
     hemLight.intensity = 0.5;
-    var light = new BABYLON.PointLight('pointLight', new BABYLON.Vector3(0, 30, 0), scene);
+    var pointLight = new BABYLON.PointLight('pointLight', new BABYLON.Vector3(0, 30, -15), scene);
 
     // Table pos: new BABYLON.Vector3(3, 5.75, 5);
 
     // var light = new BABYLON.SpotLight(
     //     "SpotLight", 
     //     // new BABYLON.Vector3(-3, 30, -15),
-    //     new BABYLON.Vector3(-15, 30, 5),
+    //     new BABYLON.Vector3(-15, 30, -15),
     //     new BABYLON.Vector3(
     //         BABYLON.Tools.ToRadians(90), 
     //         BABYLON.Tools.ToRadians(-80), 
@@ -252,18 +252,25 @@ var createScene = async function (engine, canvas, gameManager) {
     //     1,
     //     scene
     // );
-    // light.intensity = 1;
+    // light.intensity = 0.5;
     // light.position = new BABYLON.Vector3(0, 10, 0);
 
     var lightSphere = BABYLON.Mesh.CreateSphere("lightSphere", 10, 2, scene);
-    lightSphere.position = light.position;
+    lightSphere.position = pointLight.position;
     lightSphere.material = new BABYLON.StandardMaterial("lightSphere", scene);
     lightSphere.material.emissiveColor = new BABYLON.Color3(1, 1, 0);
 
-    gameManager.shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
-    gameManager.shadowGenerator.usePercentageCloserFiltering = true;
-    gameManager.shadowGenerator.useContactHardeningShadow = true;
-    gameManager.shadowGenerator.useExponentialShadowMap = false;
+    var shadowGenerator = new BABYLON.ShadowGenerator(1024, pointLight);
+    shadowGenerator.usePercentageCloserFiltering = true;
+    shadowGenerator.useContactHardeningShadow = true;
+    shadowGenerator.useExponentialShadowMap = false;
+    gameManager.shadowGenerators[0] = shadowGenerator;
+
+    // var shadowGenerator2 = new BABYLON.ShadowGenerator(1024, light);
+    // shadowGenerator2.usePercentageCloserFiltering = true;
+    // // shadowGenerator2.useContactHardeningShadow = true;
+    // shadowGenerator2.useExponentialShadowMap = false;
+    // gameManager.shadowGenerators[1] = shadowGenerator2;
 
     // var box = BABYLON.Mesh.CreateBox('', 0.5, scene);
     // box.scaling.y = 1;
@@ -345,6 +352,7 @@ var positionCandles = function(cake, candles, scene, padding = 0.1) {
     for (var key in candles) {
         // var candleRoot = scene.getTransformNodeByName(key);
         var candle = scene.getMeshByName(key + '_Material1');
+        // var candle = scene.getMeshByName(key);
         // candle.showBoundingBox = true;
         // candle.scaling = new BABYLON.Vector3(0.1, 0.25, 0.1);
         candleDims = candle.getBoundingInfo().boundingBox.extendSize;
@@ -422,7 +430,7 @@ var main = async function () {
             mesh.scaling = new BABYLON.Vector3(10, 10, 10);
             mesh.checkCollisions = true;
             mesh.receiveShadows = true;
-            gameManager.shadowGenerator.addShadowCaster(mesh);
+            gameManager.shadowGenerators[0].addShadowCaster(mesh);
         });
 
         var sofaMat = new BABYLON.StandardMaterial("sofaMat", scene);
@@ -469,7 +477,7 @@ var main = async function () {
             mesh.receiveShadows = true;
 
             let name = mesh.name;
-            gameManager.shadowGenerator.addShadowCaster(mesh);
+            gameManager.shadowGenerators[0].addShadowCaster(mesh);
             
             if (name.includes("Cylinder")) {
                 var material = new BABYLON.StandardMaterial("cakeMaterial", scene);
@@ -515,6 +523,7 @@ var main = async function () {
     var loadedCandlesCount = 0;
     for (var a=0; a<gameManager.candleCount; a++) {
         var candleTask = assetsManager.addMeshTask("candleTask" + a, "", "./assets/models/", "Candle.obj");
+        // var candleTask = assetsManager.addMeshTask("candleTask" + a, "", "./assets/models/candle/2/", "candle.babylon");
         candleTask.onSuccess = function(task) {
             var transformNode = scene.getTransformNodeByName("Candle" + loadedCandlesCount);
             var name = "Candle" + loadedCandlesCount;
@@ -522,7 +531,7 @@ var main = async function () {
 
             for (var i=0; i < task.loadedMeshes.length; i++) {
                 var mesh = task.loadedMeshes[i];
-                gameManager.shadowGenerator.addShadowCaster(mesh);
+                // gameManager.shadowGenerators[0].addShadowCaster(mesh);
                 // console.log("Name: " + mesh.name);
 
                 if (mesh.name.includes('Candle') && mesh.name.includes('Material')) {
