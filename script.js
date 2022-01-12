@@ -25,6 +25,99 @@ class GameManager {
     }
 }
 
+class CakeMaterial {
+
+    static objectName = "cakeMaterial";
+    static texturePath = "./assets/models/Cake/textures/";
+
+    static random(scene) {
+        var num = Math.floor(getRandomArbitrary(0, 5));
+
+        switch (num) {
+            case 0:
+                return this.vanillaCream(scene);
+            
+            case 1:
+                return this.vanillaCream2(scene);
+
+            case 2:
+                return this.sponge(scene);
+
+            case 3:
+                return this.sponge2(scene);
+
+            case 4:
+                return this.sponge3(scene);
+        }
+    }
+
+    static vanillaCream(scene) {
+        let textureName = "rFrosting_Vanilla_highres.png";
+        let normalTextureName = "vanilla_normal.png";
+
+        var material = new BABYLON.StandardMaterial(CakeMaterial.name, scene);
+        material.diffuseTexture = new BABYLON.Texture(CakeMaterial.texturePath + textureName, scene);
+        material.bumpTexture = new BABYLON.Texture(CakeMaterial.texturePath + normalTextureName, scene);
+        material.roughness = 0;
+
+        return material;
+    }
+
+    static vanillaCream2(scene) {
+        let textureName = "rFrosting_Vanilla_highres.png";
+        let normalTextureName = "vanilla_normal.png";
+
+        var material = new BABYLON.StandardMaterial(CakeMaterial.objectName, scene);
+        material.diffuseTexture = new BABYLON.Texture(CakeMaterial.texturePath + textureName, scene);
+        material.diffuseTexture.uScale = 5;
+        material.diffuseTexture.vScale = 5;
+        material.bumpTexture = new BABYLON.Texture(CakeMaterial.texturePath + normalTextureName, scene);
+        material.roughness = 0;
+
+        return material;
+    }
+
+    static sponge(scene) {
+        let textureName = "juniors-sponge-cake-crust.jpg";
+        let normalTextureName = "spongecake_normal.png";
+
+        var material = new BABYLON.StandardMaterial(CakeMaterial.objectName, scene);
+        material.diffuseTexture = new BABYLON.Texture(CakeMaterial.texturePath + textureName, scene);
+        material.bumpTexture = new BABYLON.Texture(CakeMaterial.texturePath + normalTextureName, scene);
+        material.roughness = 0;
+
+        return material;
+    }
+
+    static sponge2(scene) {
+        let textureName = "juniors-sponge-cake-crust.jpg";
+        let normalTextureName = "spongecake_normal.png";
+
+        var material = new BABYLON.StandardMaterial(CakeMaterial.objectName, scene);
+        material.diffuseTexture = new BABYLON.Texture(CakeMaterial.texturePath + textureName, scene);
+        material.diffuseTexture.uScale = 5;
+        material.diffuseTexture.vScale = 5;
+        material.bumpTexture = new BABYLON.Texture(CakeMaterial.texturePath + normalTextureName, scene);
+        material.roughness = 0;
+
+        return material;
+    }
+
+    static sponge3(scene) {
+        let textureName = "juniors-sponge-cake-crust.jpg";
+        let normalTextureName = "spongecake_normal.png";
+
+        var material = new BABYLON.StandardMaterial(CakeMaterial.objectName, scene);
+        material.diffuseTexture = new BABYLON.Texture(CakeMaterial.texturePath + textureName, scene);
+        material.diffuseTexture.uScale = 5;
+        material.diffuseTexture.vScale = 10;
+        material.bumpTexture = new BABYLON.Texture(CakeMaterial.texturePath + normalTextureName, scene);
+        material.roughness = 0;
+
+        return material;
+    }
+}
+
 class Candle {
     constructor(name, meshGroup, maxThreshold = 100) {
         this.isLit = true;
@@ -242,7 +335,7 @@ var createScene = async function (engine, canvas, gameManager) {
     // var light = new BABYLON.SpotLight(
     //     "SpotLight", 
     //     // new BABYLON.Vector3(-3, 30, -15),
-    //     new BABYLON.Vector3(-15, 30, -15),
+    //     new BABYLON.Vector3(-15, 30, 10),
     //     new BABYLON.Vector3(
     //         BABYLON.Tools.ToRadians(90), 
     //         BABYLON.Tools.ToRadians(-80), 
@@ -326,7 +419,7 @@ var createCamera = function (scene, canvas) {
     // Deactivate mouse control on camera
     camera.inputs.attached.pointers.detachControl();
     // Deactivate mousewheel control
-    // camera.inputs.attached.mousewheel.detachControl();
+    camera.inputs.attached.mousewheel.detachControl();
 
     return camera;
 }
@@ -468,10 +561,10 @@ var main = async function () {
     // Load Cake
     var cakeTask = assetsManager.addMeshTask("cakeTask", "", "./assets/models/Cake/", "cake.babylon");
     cakeTask.onSuccess = function(task) {
-        var num = Math.floor(getRandomArbitrary(0, 2));
-        let textureName = num == 0? "rFrosting_Vanilla_highres.png" : "juniors-sponge-cake-crust.jpg";
-        let normalTextureName = num == 0? "vanilla_normal.png" : "spongecake_normal.png";
         var transformNode = scene.getTransformNodeByName("cakeRoot");
+
+        var cakeMat = CakeMaterial.random(scene);
+
         task.loadedMeshes.forEach(function(mesh) {
             mesh.isPickable = true;
             mesh.receiveShadows = true;
@@ -480,11 +573,7 @@ var main = async function () {
             gameManager.shadowGenerators[0].addShadowCaster(mesh);
             
             if (name.includes("Cylinder")) {
-                var material = new BABYLON.StandardMaterial("cakeMaterial", scene);
-                material.diffuseTexture = new BABYLON.Texture("./assets/models/Cake/textures/" + textureName, scene);
-                material.bumpTexture = new BABYLON.Texture("./assets/models/Cake/textures/" + normalTextureName, scene);
-                material.roughness = 0;
-                mesh.material = material;
+                mesh.material = cakeMat;
 
                 if (name == "Cylinder1") {
                     mesh.name = "Cake";
