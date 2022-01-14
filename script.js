@@ -236,12 +236,20 @@ var createScene = async function (engine, canvas, gameManager) {
     scene.gravity = new BABYLON.Vector3(0, -0.1, 0);
     scene.collisionsEnabled = true;
 
+
+    
+
     // Create TransformNode
     var cakeTransformNode = new BABYLON.TransformNode("cakeRoot", scene);
     for (var i=0; i<gameManager.candleCount; i++) {
         var candleTransformNode = new BABYLON.TransformNode("Candle" + i, scene);
     }
 
+    for (var i=0; i<gameManager.candleCount; i++) {
+        var fireRoot = new BABYLON.TransformNode("fireRoot" + i, scene);
+    }
+    
+    
     // Initialize audio
     var blowAudio = new BABYLON.Sound("blowAudio", "./assets/sound/blow.wav", scene);
     blowAudio.onEndedObservable = function() {
@@ -353,7 +361,7 @@ var createScene = async function (engine, canvas, gameManager) {
     lightSphere.material = new BABYLON.StandardMaterial("lightSphere", scene);
     lightSphere.material.emissiveColor = new BABYLON.Color3(1, 1, 0);
 
-    var shadowGenerator = new BABYLON.ShadowGenerator(1024, pointLight);
+    var shadowGenerator = new BABYLON.ShadowGenerator(128, pointLight);
     shadowGenerator.usePercentageCloserFiltering = true;
     shadowGenerator.useContactHardeningShadow = true;
     shadowGenerator.useExponentialShadowMap = false;
@@ -441,10 +449,13 @@ var positionCandles = function(cake, candles, scene, padding = 0.1) {
     // upperCreamDims.showBoundingBox = true;
     let cakePosition = upperCream.getAbsolutePosition();
     // console.log(cakePosition);
-
-    for (var key in candles) {
+    for (var i = 0; i < Object.keys(candles).length; i++) {
+        var key = "Candle" + i;
         // var candleRoot = scene.getTransformNodeByName(key);
+        let fireRoot = scene.getTransformNodeByName("fireRoot" + i);
         var candle = scene.getMeshByName(key + '_Material1');
+        fireRoot.position = candle.getAbsolutePosition();
+        fireRoot.position.y = 1;
         // var candle = scene.getMeshByName(key);
         // candle.showBoundingBox = true;
         // candle.scaling = new BABYLON.Vector3(0.1, 0.25, 0.1);
@@ -548,21 +559,30 @@ var main = async function () {
     }
 
     // Load fire
-    var fireTask = assetsManager.addMeshTask("fireTask", "", "./assets/models/", "Fire.glb");
+    for (var a=0; a<gameManager.candleCount + 1; a++) {
+    var fireCount = -1;
+    var fireTask = assetsManager.addMeshTask("fireTask" + a, "", "./assets/models/", "Fire.obj");
     fireTask.onSuccess = function(task) {
-        var transformNode = scene.getTransformNodeByName("fireRoot");
-
+        fireCount++;
+        // console.log(fireCount)
+        var transformNode = scene.getTransformNodeByName("fireRoot" + fireCount);
+        var material = new BABYLON.StandardMaterial("FireMaterial", scene);
+        material.diffuseColor = new BABYLON.Color4.FromHexString("#FD6304FF");
         task.loadedMeshes.forEach(function(mesh) {
+            mesh.material = material;
             console.log("Fire mesh: " + mesh.name);
-            mesh.position = new BABYLON.Vector3(3, 5.0, 5);
+            if (!mesh.parent) {
+                mesh.parent = transformNode;
+            }
         });
+        transformNode.position = new BABYLON.Vector3(3, 0, 5);
     }
-
+    }
     // Load Cake
     var cakeTask = assetsManager.addMeshTask("cakeTask", "", "./assets/models/Cake/", "cake.babylon");
     cakeTask.onSuccess = function(task) {
         var transformNode = scene.getTransformNodeByName("cakeRoot");
-
+        // console.log("Success");
         var cakeMat = CakeMaterial.random(scene);
 
         task.loadedMeshes.forEach(function(mesh) {
@@ -571,11 +591,12 @@ var main = async function () {
 
             let name = mesh.name;
             gameManager.shadowGenerators[0].addShadowCaster(mesh);
-            
+            // console.log("before if");
             if (name.includes("Cylinder")) {
                 mesh.material = cakeMat;
-
+                // console.log("reached if");
                 if (name == "Cylinder1") {
+                    // console.log("reached cylinder");
                     mesh.name = "Cake";
                     // mesh.receiveShadows = true;
                     // mesh.showBoundingBox = true;
@@ -631,6 +652,7 @@ var main = async function () {
                     mesh.name = mesh.name.includes('006')? name + '_Material1' : name + '_Material2';
                 } else if (mesh.name.includes('Fuse')) {
                     mesh.name = name + "_Fuse" + mesh.name.includes('Material')? '_Material' : '';
+                    console.log(mesh.name);
                 } else {
                     mesh.name = name;
                 }
@@ -689,7 +711,31 @@ var main = async function () {
 
         // Position candles
         positionCandles(cake, candles, scene);
-
+        // // Fire!
+        // BABYLON.ParticleHelper.CreateAsync("fire", scene,false).then((set) => {
+        //     const candlenames = [];
+        // for(var i = 0; i <= loadedCandlesCount; i++){            
+        //     candlenames[i] = "Candle" + i.toString()   
+        // }   
+        //     // var candle = scene.getMeshByName("Candle");
+        //     console.log(candle);
+        //     console.log(candle.getAbsolutePosition());
+        //     console.log(set.systems[0]);
+        //     for(var i = 0; i < set.systems.length;i++){
+        //         candle = scene.getMeshByName(candlenames[i]);
+        //         set.systems[i].emitter = candle;
+        //         set.systems[i].maxSize = 1;
+        //         set.systems[i].minSize = 1;
+        //         // set.systems[i].maxScaleY = 0.2;
+        //         // set.systems[i].maxScaleX = 0.2;
+        //         // set.systems[i].minScaleY = 0.2;
+        //         // set.systems[i].minScaleX = 0.2;
+        //         set.systems[i].worldOffset.y = 0.8;
+        //     }
+        //     set.emitter = candle;
+        //     set.start();
+        
+        // });
         // Play background music
         var bgMusic = new BABYLON.Sound("bgMusic", "./assets/sound/happybirthday.ogg", scene, null, {
             loop: true,
