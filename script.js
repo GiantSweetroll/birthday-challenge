@@ -132,12 +132,15 @@ class Candle {
         this.currentStrength -= blowStr;
 
         if (this.currentStrength <= 0) {
+            this.currentStrength = 0;
             this.isLit = false;
         }
     }
 
     regen() {
-        this.currentStrength += this.regenRate;
+        if (this.currentStrength > 0 && this.currentStrength < this.maxThreshold) {
+            this.currentStrength += this.regenRate;
+        }
     }
 }
 
@@ -231,14 +234,11 @@ function vecToLocal(vector, mesh){
     return v;		 
 }
 
-var createScene = async function (engine, canvas, gameManager) {
+var createScene = async function (engine, canvas, gameManager, candles) {
     var scene = new BABYLON.Scene(engine);
     scene.gravity = new BABYLON.Vector3(0, -0.1, 0);
     scene.collisionsEnabled = true;
-
-
     
-
     // Create TransformNode
     var cakeTransformNode = new BABYLON.TransformNode("cakeRoot", scene);
     for (var i=0; i<gameManager.candleCount; i++) {
@@ -248,7 +248,6 @@ var createScene = async function (engine, canvas, gameManager) {
     for (var i=0; i<gameManager.candleCount; i++) {
         var fireRoot = new BABYLON.TransformNode("fireRoot" + i, scene);
     }
-    
     
     // Initialize audio
     var blowAudio = new BABYLON.Sound("blowAudio", "./assets/sound/blow.wav", scene);
@@ -303,11 +302,20 @@ var createScene = async function (engine, canvas, gameManager) {
                         // let meshKey = pickedMesh.name.substring(0, 7);
                         // console.log(meshKey);
                         console.log(pickedMesh.name);
-                        if (pickedMesh.name.includes("Candle")) {
-                            let meshKey = pickedMesh.name.substring(0, 7);
-                            console.log(meshKey);
+                        if (pickedMesh.name.includes("Fire")) {
+                            let key = pickedMesh.name.substring(4); // This is a number (i.e. 1, 4, 5)
+                            // console.log(key);
 
-                            // TODO: Reduce candle threshold
+                            var candle = candles['Candle' + key];
+                            if (candle.isLit) {
+                                candle.blow(gameManager.currentBlowStr);
+
+                                let strengthRatio = candle.currentStrength / candle.maxThreshold;
+
+                                var fireRoot = scene.getTransformNodeByName('fireRoot' + key);
+                                fireRoot.scaling.x = 1 * strengthRatio;
+                                fireRoot.scaling.z = 1 * strengthRatio;
+                            }
                         }
                     }
                 }
@@ -380,6 +388,15 @@ var createScene = async function (engine, canvas, gameManager) {
 
     scene.registerBeforeRender(function () {
         // light.position = camera.position;
+        for (var i = 0; i < gameManager.candleCount; i++) {
+            var candle = candles['Candle' + i];
+            candle.regen();
+            let strengthRatio = candle.currentStrength / candle.maxThreshold;
+
+            var fireRoot = scene.getTransformNodeByName('fireRoot' + i);
+            fireRoot.scaling.x =  1 * strengthRatio;
+            fireRoot.scaling.z = 1 * strengthRatio;
+        }
     });
 
     var timer = window.setInterval(() => {
@@ -509,11 +526,11 @@ var positionCandles = function(cake, candles, scene, padding = 0.1) {
             // Check for collision
             for (var key2 in candles) {
                 c = scene.getMeshByName(key2);
-                if (c.name != candle.name) {
+                if (c.name != key) {
                     if (candle.intersectsMesh(c, true)) {
                         console.log('Collision!');      // TODO: Remove during production phase
                         // Randomize the candle position again
-                        // continue collisionCheck;
+                        continue collisionCheck;
                     }
                 }
             }
@@ -528,7 +545,7 @@ var main = async function () {
     var canvas = document.getElementById("render");
     var engine = new BABYLON.Engine(canvas, true);
     var candles = {};
-    var scene = await createScene(engine, canvas, gameManager);
+    var scene = await createScene(engine, canvas, gameManager, candles);
 
     /// Load meshes
     var assetsManager = new BABYLON.AssetsManager(scene);
