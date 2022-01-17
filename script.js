@@ -288,10 +288,10 @@ var createScene = async function (engine, canvas, gameManager, candles) {
                 // console.log("POINTER UP");
                 gameManager.isMouseDown = false;
 
-                var cake = scene.getMeshByName("Cake");
-                // blow(blower, cake, camera, scene);
+                if (gameManager.canBlow && !gameManager.isGameEnded) {
+                    var cake = scene.getMeshByName("Cake");
+                    // blow(blower, cake, camera, scene);
 
-                if (gameManager.canBlow) {
                     gameManager.canBlow = false;
 
                     // Play blow audio
@@ -806,17 +806,19 @@ var main = async function () {
 
         // Run engine loop
         engine.runRenderLoop(function () {
-            // console.log(gameManager.currentBlowStr);
-            if (gameManager.isMouseDown && gameManager.canBlow) {
-                gameManager.increaseBlowStr();
-            } else {
-                gameManager.decreaseBlowStr();
-            }
-            gameManager.blowSlider.value = gameManager.currentBlowStr;
+            if (!gameManager.isGameEnded) {
+                // console.log(gameManager.currentBlowStr);
+                if (gameManager.isMouseDown && gameManager.canBlow) {
+                    gameManager.increaseBlowStr();
+                } else {
+                    gameManager.decreaseBlowStr();
+                }
+                gameManager.blowSlider.value = gameManager.currentBlowStr;
 
-            // Can only blow when slider reaches 0 again
-            if (gameManager.currentBlowStr == 0) {
-                gameManager.canBlow = true;
+                // Can only blow when slider reaches 0 again
+                if (gameManager.currentBlowStr == 0) {
+                    gameManager.canBlow = true;
+                }
             }
     
             scene.render();
