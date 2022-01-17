@@ -287,10 +287,10 @@ var createScene = async function (engine, canvas, gameManager, candles) {
                 // console.log("POINTER UP");
                 gameManager.isMouseDown = false;
 
-                var cake = scene.getMeshByName("Cake");
-                // blow(blower, cake, camera, scene);
+                if (gameManager.canBlow && !gameManager.isGameEnded) {
+                    var cake = scene.getMeshByName("Cake");
+                    // blow(blower, cake, camera, scene);
 
-                if (gameManager.canBlow) {
                     gameManager.canBlow = false;
 
                     // Play blow audio
@@ -380,7 +380,7 @@ var createScene = async function (engine, canvas, gameManager, candles) {
     lightSphere.material = new BABYLON.StandardMaterial("lightSphere", scene);
     lightSphere.material.emissiveColor = new BABYLON.Color3(1, 1, 0);
 
-    var shadowGenerator = new BABYLON.ShadowGenerator(128, pointLight);
+    var shadowGenerator = new BABYLON.ShadowGenerator(1024, pointLight);
     shadowGenerator.usePercentageCloserFiltering = true;
     shadowGenerator.useContactHardeningShadow = true;
     shadowGenerator.useExponentialShadowMap = false;
@@ -689,7 +689,8 @@ var main = async function () {
                 if (mesh.name.includes('Candle') && mesh.name.includes('Material')) {
                     var material = new BABYLON.StandardMaterial("material", scene);
                     var num = Math.floor(getRandomArbitrary(1, 6));     // Randomize texture
-                    material.diffuseTexture = new BABYLON.Texture("./assets/models/candle_colors/" + num + ".jpg", scene);
+                    // material.diffuseTexture = new BABYLON.Texture("./assets/models/candle_colors/" + num + ".jpg", scene);
+                    material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
                     mesh.material = material;
                     mesh.name = mesh.name.includes('006')? name + '_Material1' : name + '_Material2';
                 } else if (mesh.name.includes('Fuse')) {
@@ -822,17 +823,19 @@ var main = async function () {
 
         // Run engine loop
         engine.runRenderLoop(function () {
-            // console.log(gameManager.currentBlowStr);
-            if (gameManager.isMouseDown && gameManager.canBlow) {
-                gameManager.increaseBlowStr();
-            } else {
-                gameManager.decreaseBlowStr();
-            }
-            gameManager.blowSlider.value = gameManager.currentBlowStr;
+            if (!gameManager.isGameEnded) {
+                // console.log(gameManager.currentBlowStr);
+                if (gameManager.isMouseDown && gameManager.canBlow) {
+                    gameManager.increaseBlowStr();
+                } else {
+                    gameManager.decreaseBlowStr();
+                }
+                gameManager.blowSlider.value = gameManager.currentBlowStr;
 
-            // Can only blow when slider reaches 0 again
-            if (gameManager.currentBlowStr == 0) {
-                gameManager.canBlow = true;
+                // Can only blow when slider reaches 0 again
+                if (gameManager.currentBlowStr == 0) {
+                    gameManager.canBlow = true;
+                }
             }
     
             scene.render();
