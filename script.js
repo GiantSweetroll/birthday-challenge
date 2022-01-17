@@ -271,9 +271,8 @@ var createScene = async function (engine, canvas, gameManager, candles) {
 
     // Load GUI
     let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("GUI", true, scene);
-    let loadedGUI = await advancedTexture.parseFromSnippetAsync("#YXK7SU#9");
+    let loadedGUI = await advancedTexture.parseFromSnippetAsync("#YXK7SU#15");
     gameManager.guiAdvancedTexture = advancedTexture;
-
     // Control blow slider
     let blowSlider = advancedTexture.getControlByName("BlowSlider");
     blowSlider.displayThumb = false;
@@ -336,6 +335,9 @@ var createScene = async function (engine, canvas, gameManager, candles) {
 
                                     // If no more active candles, end the game
                                     if (gameManager.activeCandlesCount == 0) {
+                                        let advancedTexture = gameManager.guiAdvancedTexture;
+                                        let gameWin = advancedTexture.getControlByName("Win");
+                                        gameWin.isVisible = true;
                                         gameManager.isGameEnded = true;
                                     }
                                 }
@@ -439,6 +441,9 @@ var createScene = async function (engine, canvas, gameManager, candles) {
 
         if (currentDuration <= 0 || gameManager.isGameEnded) {
             gameManager.isGameEnded = true;
+            let advancedTexture = gameManager.guiAdvancedTexture;
+            let gameOver = advancedTexture.getControlByName("GameOverA");
+            gameOver.isVisible = true;
             window.clearInterval(timer);
         }
 
@@ -624,8 +629,12 @@ var resetGame = function(scene, gameManager, candles) {
         }
 
         if (currentDuration <= 0 || gameManager.isGameEnded) {
+            let advancedTexture = gameManager.guiAdvancedTexture;
+            let gameOver = advancedTexture.getControlByName("GameOverA");
+            gameOver.isVisible = true;
             gameManager.isGameEnded = true;
             window.clearInterval(timer);
+
         }
 
     }, 1000);
@@ -869,6 +878,28 @@ var main = async function () {
         let gui = scene.getTextureByName("GUI");
         if (gui != null) {
             var iconsFolder = "./assets/icons/";
+            // Menu screen
+            let gameTitle = gui.getControlByName("Title");
+            let rectangleMenu = gui.getControlByName("RectangleMenu");
+            let button = gui.getControlByName("Button");
+            let play = gui.getControlByName("PlayButton");
+            let gameOver = gui.getControlByName("GameOverA");
+            let gameWin = gui.getControlByName("Win");
+            gameOver.isVisible = false;
+            gameWin.isVisible = false;
+            button.onPointerDownObservable.add(function(event) {
+                gameTitle.isVisible = true;
+                rectangleMenu.isVisible = true;
+                play.isVisible = true;
+                gameWin.isVisible = false;
+                gameOver.isVisible = false;
+            });
+            play.onPointerDownObservable.add(function(event) {
+                gameTitle.isVisible = false;
+                rectangleMenu.isVisible = false;
+                play.isVisible = false;
+                button.isVisible = true;
+            });
             // Manage bg music control
             let musicImage = gui.getControlByName("MusicIcon");
             let ellipse = gui.getControlByName("Ellipse");
