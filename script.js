@@ -452,10 +452,7 @@ var positionCandles = function(cake, candles, scene, padding = 0.1) {
     for (var i = 0; i < Object.keys(candles).length; i++) {
         var key = "Candle" + i;
         // var candleRoot = scene.getTransformNodeByName(key);
-        let fireRoot = scene.getTransformNodeByName("fireRoot" + i);
         var candle = scene.getMeshByName(key + '_Material1');
-        fireRoot.position = candle.getAbsolutePosition();
-        fireRoot.position.y = 1;
         // var candle = scene.getMeshByName(key);
         // candle.showBoundingBox = true;
         // candle.scaling = new BABYLON.Vector3(0.1, 0.25, 0.1);
@@ -464,6 +461,12 @@ var positionCandles = function(cake, candles, scene, padding = 0.1) {
         // candleDims.y *= candleRoot.scaling.y;
         // candleDims.z *= candleRoot.scaling.z;
         // console.log(candleDims);
+
+        // fireRoot.position.y = candleDims.y;
+
+        // fireRoot._children.forEach(function(element) {
+        //     element.position = candle.getAbsolutePosition();
+        // });
 
         // minBoundaries = new BABYLON.Vector3(
         //     cakePosition.x - upperCreamDims.x + padding,
@@ -497,6 +500,11 @@ var positionCandles = function(cake, candles, scene, padding = 0.1) {
                 // console.log(mesh.getAbsolutePosition());
             });
             // console.log(transformNode.name + ': ' + transformNode.position);
+
+            // Position fire
+            let fireRoot = scene.getTransformNodeByName("fireRoot" + i);
+            fireRoot.position = candle.getAbsolutePosition();
+            fireRoot.position.y -= 0.08;
 
             // Check for collision
             for (var key2 in candles) {
@@ -560,23 +568,24 @@ var main = async function () {
 
     // Load fire
     for (var a=0; a<gameManager.candleCount + 1; a++) {
-    var fireCount = -1;
-    var fireTask = assetsManager.addMeshTask("fireTask" + a, "", "./assets/models/", "Fire.obj");
-    fireTask.onSuccess = function(task) {
-        fireCount++;
-        // console.log(fireCount)
-        var transformNode = scene.getTransformNodeByName("fireRoot" + fireCount);
-        var material = new BABYLON.StandardMaterial("FireMaterial", scene);
-        material.diffuseColor = new BABYLON.Color4.FromHexString("#FD6304FF");
-        task.loadedMeshes.forEach(function(mesh) {
-            mesh.material = material;
-            console.log("Fire mesh: " + mesh.name);
-            if (!mesh.parent) {
-                mesh.parent = transformNode;
-            }
-        });
-        transformNode.position = new BABYLON.Vector3(3, 0, 5);
-    }
+        var fireCount = -1;
+        var fireTask = assetsManager.addMeshTask("fireTask" + a, "", "./assets/models/", "Fire.obj");
+        fireTask.onSuccess = function(task) {
+            fireCount++;
+            // console.log(fireCount)
+            var transformNode = scene.getTransformNodeByName("fireRoot" + fireCount);
+            var material = new BABYLON.StandardMaterial("FireMaterial", scene);
+            material.diffuseColor = new BABYLON.Color4.FromHexString("#FD6304FF");
+            task.loadedMeshes.forEach(function(mesh) {
+                mesh.material = material;
+                mesh.name = 'Fire' + fireCount;
+                // console.log("Fire mesh: " + mesh.name);
+                if (!mesh.parent) {
+                    mesh.parent = transformNode;
+                }
+            });
+            transformNode.position = new BABYLON.Vector3(3, 0, 5);
+        }
     }
     // Load Cake
     var cakeTask = assetsManager.addMeshTask("cakeTask", "", "./assets/models/Cake/", "cake.babylon");
