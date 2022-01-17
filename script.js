@@ -10,6 +10,8 @@ class GameManager {
         this.canBlow = true;
         this.candleCount = candleCount;
         this.shadowGenerators = [];
+        this.isGameEnded = false;
+        this.activeCandlesCount = this.candleCount;
     }
 
     increaseBlowStr() {
@@ -280,7 +282,7 @@ var createScene = async function (engine, canvas, gameManager, candles) {
             case BABYLON.PointerEventTypes.POINTERDOWN:
                 // console.log("POINTER DOWN");
                 gameManager.isMouseDown = true;
-                moveBlower(blower, scene.pointerX, scene.pointerY, scene);
+                // moveBlower(blower, scene.pointerX, scene.pointerY, scene);
                 break;
             case BABYLON.PointerEventTypes.POINTERUP:
                 // console.log("POINTER UP");
@@ -315,6 +317,15 @@ var createScene = async function (engine, canvas, gameManager, candles) {
                                 var fireRoot = scene.getTransformNodeByName('fireRoot' + key);
                                 fireRoot.scaling.x = 1 * strengthRatio;
                                 fireRoot.scaling.z = 1 * strengthRatio;
+
+                                if (candle.currentStrength == 0) {
+                                    gameManager.activeCandlesCount -= 1;
+
+                                    // If no more active candles, end the game
+                                    if (gameManager.activeCandlesCount == 0) {
+                                        gameManager.isGameEnded = true;
+                                    }
+                                }
                             }
                         }
                     }
@@ -388,14 +399,18 @@ var createScene = async function (engine, canvas, gameManager, candles) {
 
     scene.registerBeforeRender(function () {
         // light.position = camera.position;
-        for (var i = 0; i < gameManager.candleCount; i++) {
-            var candle = candles['Candle' + i];
-            candle.regen();
-            let strengthRatio = candle.currentStrength / candle.maxThreshold;
-
-            var fireRoot = scene.getTransformNodeByName('fireRoot' + i);
-            fireRoot.scaling.x =  1 * strengthRatio;
-            fireRoot.scaling.z = 1 * strengthRatio;
+        if (!gameManager.isGameEnded) {
+            for (var i = 0; i < gameManager.candleCount; i++) {
+                var candle = candles['Candle' + i];
+                candle.regen();
+                let strengthRatio = candle.currentStrength / candle.maxThreshold;
+    
+                var fireRoot = scene.getTransformNodeByName('fireRoot' + i);
+                fireRoot.scaling.x =  1 * strengthRatio;
+                fireRoot.scaling.z = 1 * strengthRatio;
+            }
+        } else {
+            console.log('Game ended');
         }
     });
 
@@ -404,7 +419,7 @@ var createScene = async function (engine, canvas, gameManager, candles) {
         timerTextBlock.text = convertTimeToString(currentDuration);
 
         if (currentDuration <= 0) {
-            // TODO: Stop game
+            gameManager.isGameEnded = true;
             window.clearInterval(timer);
         }
 
