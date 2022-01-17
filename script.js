@@ -12,18 +12,30 @@ class GameManager {
         this.shadowGenerators = [];
         this.isGameEnded = false;
         this.activeCandlesCount = this.candleCount;
+        this.guiAdvancedTexture = null;
+        this.timer = null;
     }
 
+    // Increases the blow strength
     increaseBlowStr() {
         if (this.currentBlowStr < this.maxBlowStr) {
             this.currentBlowStr += this.blowStrIncr;
         }
     }
 
+    // Decreases the blow strength
     decreaseBlowStr() {
         if (this.currentBlowStr > 0) {
             this.currentBlowStr -= this.blowStrIncr;
         }
+    }
+
+    // Resets attributes for new game
+    reset() {
+        this.currentBlowStr = 0;
+        this.canBlow = true;
+        this.isGameEnded = false;
+        this.activeCandlesCount = this.candleCount;
     }
 }
 
@@ -259,7 +271,8 @@ var createScene = async function (engine, canvas, gameManager, candles) {
 
     // Load GUI
     let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("GUI", true, scene);
-    let loadedGUI = await advancedTexture.parseFromSnippetAsync("#YXK7SU#12");
+    let loadedGUI = await advancedTexture.parseFromSnippetAsync("#YXK7SU#15");
+    gameManager.guiAdvancedTexture = advancedTexture;
     // Control blow slider
     let blowSlider = advancedTexture.getControlByName("BlowSlider");
     blowSlider.displayThumb = false;
@@ -322,8 +335,10 @@ var createScene = async function (engine, canvas, gameManager, candles) {
 
                                     // If no more active candles, end the game
                                     if (gameManager.activeCandlesCount == 0) {
+                                        let advancedTexture = gameManager.guiAdvancedTexture;
+                                        let gameWin = advancedTexture.getControlByName("Win");
+                                        gameWin.isVisible = true;
                                         gameManager.isGameEnded = true;
-                                        gui.play.isVisible = false;
                                     }
                                 }
                             }
@@ -353,9 +368,12 @@ var createScene = async function (engine, canvas, gameManager, candles) {
     // );
     // // light.parent = camera;
     // light.intensity = 0.5;
+    // Hemispheric light
     var hemLight = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(0, 1, 0), scene);
     hemLight.intensity = 0.5;
+    // Point light
     var pointLight = new BABYLON.PointLight('pointLight', new BABYLON.Vector3(0, 30, -15), scene);
+    pointLight.radius = 100;
 
     // Table pos: new BABYLON.Vector3(3, 5.75, 5);
 
@@ -410,7 +428,7 @@ var createScene = async function (engine, canvas, gameManager, candles) {
                 fireRoot.scaling.z = 1 * strengthRatio;
             }
         } else {
-            console.log('Game ended');
+            resetGame(scene, gameManager, candles);
         }
     });
 
@@ -418,13 +436,16 @@ var createScene = async function (engine, canvas, gameManager, candles) {
         currentDuration--;
         timerTextBlock.text = convertTimeToString(currentDuration);
 
-        if (currentDuration <= 0) {
+        if (currentDuration <= 0 || gameManager.isGameEnded) {
             gameManager.isGameEnded = true;
-
+            let advancedTexture = gameManager.guiAdvancedTexture;
+            let gameOver = advancedTexture.getControlByName("GameOverA");
+            gameOver.isVisible = true;
             window.clearInterval(timer);
         }
 
     }, 1000);
+    gameManager.timer = timer;
 
     // scene.debugLayer.show();
 
@@ -471,13 +492,15 @@ var createCamera = function (scene, canvas) {
  * @param {dict} candles -  A dictionary of Candle objects 
  * @param {Scene} scene - Babylon Scene object
  */
-var positionCandles = function(cake, candles, scene, padding = 0.1) {
+var positionCandles = function(candles, scene, padding = 0.1) {
     let cakeRoot = scene.getTransformNodeByName("cakeRoot");
     let upperCream = scene.getMeshByName("upperCream");
     let upperCreamDims = upperCream.getBoundingInfo().boundingBox.extendSize;
-    upperCreamDims.x *= cakeRoot.scaling.x;
-    upperCreamDims.y *= cakeRoot.scaling.y;
-    upperCreamDims.z *= cakeRoot.scaling.z;
+    upperCreamDims = new BABYLON.Vector3(
+        upperCreamDims.x * cakeRoot.scaling.x,
+        upperCreamDims.y * cakeRoot.scaling.y,
+        upperCreamDims.z * cakeRoot.scaling.z
+    );
     // console.log(cakeDims);
     // upperCreamDims.showBoundingBox = true;
     let cakePosition = upperCream.getAbsolutePosition();
@@ -489,7 +512,7 @@ var positionCandles = function(cake, candles, scene, padding = 0.1) {
         // var candle = scene.getMeshByName(key);
         // candle.showBoundingBox = true;
         // candle.scaling = new BABYLON.Vector3(0.1, 0.25, 0.1);
-        candleDims = candle.getBoundingInfo().boundingBox.extendSize;
+        var candleDims = candle.getBoundingInfo().boundingBox.extendSize;
         // candleDims.x *= candleRoot.scaling.x;
         // candleDims.y *= candleRoot.scaling.y;
         // candleDims.z *= candleRoot.scaling.z;
@@ -553,6 +576,66 @@ var positionCandles = function(cake, candles, scene, padding = 0.1) {
             break;
         }
     }
+}
+
+// Resets the game
+var resetGame = function(scene, gameManager, candles) {
+    var cake = scene.getMeshByName('Cake');
+    var cakeLower = scene.getMeshByName('Cylinder');
+
+    var cakeMat = CakeMaterial.random()
+    
+    cake.material = cakeMat
+    cakeLower.material = cakeMat;
+
+    // Change candle textures
+    for (var i=0; i<gameManager.candleCount; i++) {
+        let key = "Candle" + i;
+        var candle = candles[key]
+        candle.currentStrength = candle.maxThreshold;
+        candle.isLit = true;
+
+        var candleMat1 = scene.getMeshByName(key + "_Material1");
+        candleMat1.material.diffuseColor = new BABYLON.Color3(
+            Math.random(),
+            Math.random(),
+            Math.random()
+        );
+
+        var candleMat2 = scene.getMeshByName("Candle" + i + "_Material2");
+        candleMat2.material.diffuseColor = new BABYLON.Color3(
+            Math.random(),
+            Math.random(),
+            Math.random()
+        );
+    }
+
+    // Reposition candles
+    positionCandles(candles, scene);
+
+    // Reset timer
+    window.clearInterval(gameManager.timer);
+    let advancedTexture = gameManager.guiAdvancedTexture;
+    let timerTextBlock = advancedTexture.getControlByName("Timer");
+    var currentDuration = gameManager.gameDuration;
+    var timer = window.setInterval(() => {
+        currentDuration--;
+        timerTextBlock.text = convertTimeToString(currentDuration);
+
+        if (currentDuration <= 0 || gameManager.isGameEnded) {
+            let advancedTexture = gameManager.guiAdvancedTexture;
+            let gameOver = advancedTexture.getControlByName("GameOverA");
+            gameOver.isVisible = true;
+            gameManager.isGameEnded = true;
+            window.clearInterval(timer);
+
+        }
+
+    }, 1000);
+    gameManager.timer = timer;
+
+    // Reset game manager
+    gameManager.reset();
 }
 
 var main = async function () {
@@ -753,7 +836,7 @@ var main = async function () {
         camera.radius = 5;
 
         // Position candles
-        positionCandles(cake, candles, scene);
+        positionCandles(candles, scene);
         // // Fire!
         // BABYLON.ParticleHelper.CreateAsync("fire", scene,false).then((set) => {
         //     const candlenames = [];
@@ -794,10 +877,16 @@ var main = async function () {
             let rectangleMenu = gui.getControlByName("RectangleMenu");
             let button = gui.getControlByName("Button");
             let play = gui.getControlByName("PlayButton");
+            let gameOver = gui.getControlByName("GameOverA");
+            let gameWin = gui.getControlByName("Win");
+            gameOver.isVisible = false;
+            gameWin.isVisible = false;
             button.onPointerDownObservable.add(function(event) {
                 gameTitle.isVisible = true;
                 rectangleMenu.isVisible = true;
                 play.isVisible = true;
+                gameWin.isVisible = false;
+                gameOver.isVisible = false;
             });
             play.onPointerDownObservable.add(function(event) {
                 gameTitle.isVisible = false;
