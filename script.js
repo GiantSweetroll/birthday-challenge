@@ -426,13 +426,16 @@ var createScene = async function (engine, canvas, gameManager, candles) {
                 fireRoot.scaling.z = 1 * strengthRatio;
             }
         } else {
-            resetGame(scene, gameManager, candles);
+            // resetGame(scene, gameManager, candles);
         }
     });
 
     var timer = window.setInterval(() => {
-        currentDuration--;
-        timerTextBlock.text = convertTimeToString(currentDuration);
+        
+        if (!gameManager.isGameEnded) {
+            currentDuration--;
+            timerTextBlock.text = convertTimeToString(currentDuration);
+        }
 
         if (currentDuration <= 0 || gameManager.isGameEnded) {
             gameManager.isGameEnded = true;
@@ -614,8 +617,11 @@ var resetGame = function(scene, gameManager, candles) {
     let timerTextBlock = advancedTexture.getControlByName("Timer");
     var currentDuration = gameManager.gameDuration;
     var timer = window.setInterval(() => {
-        currentDuration--;
-        timerTextBlock.text = convertTimeToString(currentDuration);
+
+        if (!gameManager.isGameEnded) {
+            currentDuration--;
+            timerTextBlock.text = convertTimeToString(currentDuration);
+        }
 
         if (currentDuration <= 0 || gameManager.isGameEnded) {
             gameManager.isGameEnded = true;
