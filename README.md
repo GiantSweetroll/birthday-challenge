@@ -20,11 +20,11 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://gitlab.com/dpiofog/kdrt-frontend">
-    <img src="flutter_frontend/assets/logo/logo_512.png" alt="Logo" width="80" height="80">
+  <a href="https://github.com/GiantSweetroll/birthday-challenge">
+    <!-- <img src="flutter_frontend/assets/logo/logo_512.png" alt="Logo" width="80" height="80"> -->
   </a>
 
-  <h3 align="center">Angelica</h3>
+  <h3 align="center">The Birthday Challenge</h3>
 
   <p align="center">
     A game of candle blowing so that your wish comes true
