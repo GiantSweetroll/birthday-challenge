@@ -14,6 +14,7 @@ class GameManager {
         this.activeCandlesCount = this.candleCount;
         this.guiAdvancedTexture = null;
         this.timer = null;
+        this.timeLeft = this.gameDuration;
     }
 
     // Increases the blow strength
@@ -32,6 +33,7 @@ class GameManager {
 
     // Resets attributes for new game
     reset() {
+        this.timeLeft = this.gameDuration;
         this.currentBlowStr = 0;
         this.canBlow = true;
         this.isGameEnded = false;
@@ -278,9 +280,8 @@ var createScene = async function (engine, canvas, gameManager, candles) {
     blowSlider.displayThumb = false;
     blowSlider.value = 0;
 
-    var currentDuration = gameManager.gameDuration;
     let timerTextBlock = advancedTexture.getControlByName("Timer");
-    timerTextBlock.text = convertTimeToString(currentDuration);
+    timerTextBlock.text = convertTimeToString(gameManager.timeLeft);
 
     gameManager.blowSlider = blowSlider;
 
@@ -433,20 +434,7 @@ var createScene = async function (engine, canvas, gameManager, candles) {
     });
 
     var timer = window.setInterval(() => {
-        
-        if (!gameManager.isGameEnded) {
-            currentDuration--;
-            timerTextBlock.text = convertTimeToString(currentDuration);
-        }
-
-        if (currentDuration <= 0 || gameManager.isGameEnded) {
-            gameManager.isGameEnded = true;
-            let advancedTexture = gameManager.guiAdvancedTexture;
-            let gameOver = advancedTexture.getControlByName("GameOverA");
-            gameOver.isVisible = true;
-            window.clearInterval(timer);
-        }
-
+        updateTimer(timer, gameManager);
     }, 1000);
     gameManager.timer = timer;
 
@@ -581,6 +569,36 @@ var positionCandles = function(candles, scene, padding = 0.1) {
     }
 }
 
+/**
+ * Updates the timer display
+ * @param {*} timer 
+ * @param {GameManager} gameManager
+ */
+var updateTimer = function(timer, gameManager) {
+    let gui = gameManager.guiAdvancedTexture;
+    let timerTextBlock = gui.getControlByName("Timer");
+
+    if (!gameManager.isGameEnded) {
+        gameManager.timeLeft--;
+        console.log('Time left in seconds: ' + gameManager.timeLeft);
+        timerTextBlock.text = convertTimeToString(gameManager.timeLeft);
+    }
+
+    if (gameManager.timeLeft <= 0 || gameManager.isGameEnded) {
+        gameManager.isGameEnded = true;
+        let advancedTexture = gameManager.guiAdvancedTexture;
+        if (gameManager.activeCandlesCount > 0) {
+            let gameOver = advancedTexture.getControlByName("GameOverA");
+            gameOver.isVisible = true;
+        } else {
+            let gameWin = gui.getControlByName("Win");
+            gameWin.isVisible = true;
+        }
+        window.clearInterval(timer);
+    }
+
+}
+
 // Resets the game
 var resetGame = function(scene, gameManager, candles) {
     var cake = scene.getMeshByName('Cake');
@@ -616,37 +634,23 @@ var resetGame = function(scene, gameManager, candles) {
     // Reposition candles
     positionCandles(candles, scene);
 
-    // Reset timer
-    window.clearInterval(gameManager.timer);
-    let advancedTexture = gameManager.guiAdvancedTexture;
-    let timerTextBlock = advancedTexture.getControlByName("Timer");
-    var currentDuration = gameManager.gameDuration;
-    var timer = window.setInterval(() => {
-
-        if (!gameManager.isGameEnded) {
-            currentDuration--;
-            timerTextBlock.text = convertTimeToString(currentDuration);
-        }
-
-        if (currentDuration <= 0 || gameManager.isGameEnded) {
-            let advancedTexture = gameManager.guiAdvancedTexture;
-            let gameOver = advancedTexture.getControlByName("GameOverA");
-            gameOver.isVisible = true;
-            gameManager.isGameEnded = true;
-            window.clearInterval(timer);
-
-        }
-
-    }, 1000);
-    gameManager.timer = timer;
-
     // Reset game manager
     gameManager.reset();
+
+    // Reset timer
+    window.clearInterval(gameManager.timer);
+    let timerTextBlock = gameManager.guiAdvancedTexture.getControlByName('Timer');
+    timerTextBlock.text = convertTimeToString(gameManager.timeLeft);
+    var timer = window.setInterval(() => {
+        updateTimer(timer, gameManager);
+    }, 1000);
+    gameManager.timer = timer;
 }
 
 var main = async function () {
     // Main Process
     let gameManager = new GameManager(candleCount = 10, gameDuration = 300);
+    gameManager.isGameEnded = true;     // Don't start the game at launch
     var canvas = document.getElementById("render");
     var engine = new BABYLON.Engine(canvas, true);
     var candles = {};
@@ -895,6 +899,7 @@ var main = async function () {
                 gameOver.isVisible = false;
             });
             play.onPointerDownObservable.add(function(event) {
+                resetGame(scene, gameManager, candles);
                 gameTitle.isVisible = false;
                 rectangleMenu.isVisible = false;
                 play.isVisible = false;
