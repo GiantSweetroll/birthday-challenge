@@ -15,6 +15,7 @@ class GameManager {
         this.guiAdvancedTexture = null;
         this.timer = null;
         this.timeLeft = this.gameDuration;
+        this.isInMenu = true;
     }
 
     // Increases the blow strength
@@ -580,17 +581,17 @@ var updateTimer = function(timer, gameManager) {
 
     if (!gameManager.isGameEnded) {
         gameManager.timeLeft--;
-        console.log('Time left in seconds: ' + gameManager.timeLeft);
+        // console.log('Time left in seconds: ' + gameManager.timeLeft);
         timerTextBlock.text = convertTimeToString(gameManager.timeLeft);
     }
 
     if (gameManager.timeLeft <= 0 || gameManager.isGameEnded) {
         gameManager.isGameEnded = true;
         let advancedTexture = gameManager.guiAdvancedTexture;
-        if (gameManager.activeCandlesCount > 0) {
+        if (gameManager.activeCandlesCount > 0 && !gameManager.isInMenu) {
             let gameOver = advancedTexture.getControlByName("GameOverA");
             gameOver.isVisible = true;
-        } else {
+        } else if (!gameManager.isInMenu) {
             let gameWin = gui.getControlByName("Win");
             gameWin.isVisible = true;
         }
@@ -708,7 +709,6 @@ var main = async function () {
             'Object063'
         ];
         meshNames.forEach(function(meshName) {
-            console.log(meshName);
             gameManager.shadowGenerators[0].addShadowCaster(scene.getMeshByName(meshName));
         });
     }
@@ -809,7 +809,7 @@ var main = async function () {
                     mesh.name = mesh.name.includes('006')? name + '_Material1' : name + '_Material2';
                 } else if (mesh.name.includes('Fuse')) {
                     mesh.name = name + "_Fuse" + mesh.name.includes('Material')? '_Material' : '';
-                    console.log(mesh.name);
+                    // console.log(mesh.name);
                 } else {
                     mesh.name = name;
                 }
@@ -918,6 +918,8 @@ var main = async function () {
                 play.isVisible = true;
                 gameWin.isVisible = false;
                 gameOver.isVisible = false;
+                gameManager.isInMenu = true;
+                gameManager.isGameEnded = true;     // Stop the game
             });
             play.onPointerDownObservable.add(function(event) {
                 resetGame(scene, gameManager, candles);
@@ -925,6 +927,7 @@ var main = async function () {
                 rectangleMenu.isVisible = false;
                 play.isVisible = false;
                 button.isVisible = true;
+                gameManager.isInMenu = false;
             });
             // Manage bg music control
             let musicImage = gui.getControlByName("MusicIcon");
