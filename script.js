@@ -668,9 +668,9 @@ var main = async function () {
             mesh.scaling = new BABYLON.Vector3(10, 10, 10);
             mesh.checkCollisions = true;
             mesh.receiveShadows = true;
-            gameManager.shadowGenerators[0].addShadowCaster(mesh);
         });
 
+        // Add missing textures
         var sofaMat = new BABYLON.StandardMaterial("sofaMat", scene);
         sofaMat.diffuseTexture = new BABYLON.Texture("./assets/models/apartment/fabric_blend.jpg", scene);
         // sofaMat.bumpTexture = new BABYLON.Texture("./assets/models/apartment/rockwell_bump_normal.png", scene);
@@ -690,6 +690,27 @@ var main = async function () {
         var missingBookMat = new BABYLON.StandardMaterial("woodMat", scene);
         missingBookMat.diffuseTexture = new BABYLON.Texture("./assets/models/apartment/oblojka_04.jpg", scene);
         scene.getMeshByName("mesh_mm1").material = missingBookMat;
+
+        // Add shadows
+        var meshNames = [
+            'Box022',
+            'book4',
+            'book_2',
+            'mesh_mm1',
+            'Box013',
+            'Box012',
+            'Line001',
+            'Box011',
+            'Cylinder110',
+            'Cylinder111',
+            'Box023',
+            'Box012.002',
+            'Object063'
+        ];
+        meshNames.forEach(function(meshName) {
+            console.log(meshName);
+            gameManager.shadowGenerators[0].addShadowCaster(scene.getMeshByName(meshName));
+        });
     }
 
     // Load fire
