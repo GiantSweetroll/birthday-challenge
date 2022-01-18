@@ -40,6 +40,15 @@ class GameManager {
         this.isGameEnded = false;
         this.activeCandlesCount = this.candleCount;
     }
+
+    showGameplayWidgets(isVisible) {
+        this.guiAdvancedTexture.getControlByName("MusicIcon").isVisible = isVisible;
+        this.guiAdvancedTexture.getControlByName("Ellipse").isVisible = isVisible;
+        this.guiAdvancedTexture.getControlByName("Timer").isVisible = isVisible;
+        this.guiAdvancedTexture.getControlByName("Rectangle").isVisible = isVisible;
+        this.guiAdvancedTexture.getControlByName("BlowSlider").isVisible = isVisible;
+        this.guiAdvancedTexture.getControlByName("Button").isVisible = isVisible;
+    }
 }
 
 class CakeMaterial {
@@ -274,7 +283,7 @@ var createScene = async function (engine, canvas, gameManager, candles) {
 
     // Load GUI
     let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("GUI", true, scene);
-    let loadedGUI = await advancedTexture.parseFromSnippetAsync("#YXK7SU#18");
+    let loadedGUI = await advancedTexture.parseFromSnippetAsync("#YXK7SU#26");
     gameManager.guiAdvancedTexture = advancedTexture;
     // Control blow slider
     let blowSlider = advancedTexture.getControlByName("BlowSlider");
@@ -420,8 +429,10 @@ var createScene = async function (engine, canvas, gameManager, candles) {
     scene.registerBeforeRender(function () {
         // light.position = camera.position;
         let gameInstructions = gameManager.guiAdvancedTexture.getControlByName("Instructions");
+        let gameInstructions2 = gameManager.guiAdvancedTexture.getControlByName("Instructions2");
         if (!gameManager.isGameEnded) {
             gameInstructions.isVisible = true;
+            gameInstructions2.isVisible = true;
             for (var i = 0; i < gameManager.candleCount; i++) {
                 var candle = candles['Candle' + i];
                 candle.regen();
@@ -434,7 +445,10 @@ var createScene = async function (engine, canvas, gameManager, candles) {
         } else {
             // resetGame(scene, gameManager, candles);
             gameInstructions.isVisible = gameManager.isInMenu? true : false;
+            gameInstructions2.isVisible = gameManager.isInMenu? true : false;
         }
+
+        gameManager.showGameplayWidgets(!gameManager.isInMenu);
     });
 
     var timer = window.setInterval(() => {
@@ -955,6 +969,8 @@ var main = async function () {
             let gameWin = gui.getControlByName("Win");
             let retry = gui.getControlByName("Button_button1");
             let gameInstructions = gui.getControlByName("Instructions");
+            let gameInstructions2 = gui.getControlByName("Instructions2");
+            let menuRectangle = gui.getControlByName("RectangleMenu");
             gameOver.isVisible = false;
             gameWin.isVisible = false;
             button.onPointerDownObservable.add(function(event) {
@@ -967,6 +983,7 @@ var main = async function () {
                 gameManager.isInMenu = true;
                 gameManager.isGameEnded = true;     // Stop the game
                 gameInstructions.isVisible = true;
+                gameInstructions2.isVisible = true;
             });
             play.onPointerDownObservable.add(function(event) {
                 resetGame(scene, gameManager, candles);
@@ -978,6 +995,7 @@ var main = async function () {
                 gameWin.isVisible = false;
                 gameOver.isVisible = false;
                 gameInstructions.isVisible = true;
+                gameInstructions2.isVisible = true;
             });
             // Manage bg music control
             let musicImage = gui.getControlByName("MusicIcon");
