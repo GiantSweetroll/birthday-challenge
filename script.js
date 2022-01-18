@@ -661,7 +661,7 @@ var resetGame = function(scene, gameManager, candles) {
 
 var main = async function () {
     // Main Process
-    let gameManager = new GameManager(candleCount = 1, gameDuration = 20);
+    let gameManager = new GameManager(candleCount = 10, gameDuration = 300);
     gameManager.isGameEnded = true;     // Don't start the game at launch
     var canvas = document.getElementById("render");
     var engine = new BABYLON.Engine(canvas, true);
