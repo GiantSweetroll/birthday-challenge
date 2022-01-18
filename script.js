@@ -274,7 +274,7 @@ var createScene = async function (engine, canvas, gameManager, candles) {
 
     // Load GUI
     let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("GUI", true, scene);
-    let loadedGUI = await advancedTexture.parseFromSnippetAsync("#YXK7SU#15");
+    let loadedGUI = await advancedTexture.parseFromSnippetAsync("#YXK7SU#18");
     gameManager.guiAdvancedTexture = advancedTexture;
     // Control blow slider
     let blowSlider = advancedTexture.getControlByName("BlowSlider");
@@ -419,7 +419,9 @@ var createScene = async function (engine, canvas, gameManager, candles) {
 
     scene.registerBeforeRender(function () {
         // light.position = camera.position;
+        let gameInstructions = gameManager.guiAdvancedTexture.getControlByName("Instructions");
         if (!gameManager.isGameEnded) {
+            gameInstructions.isVisible = true;
             for (var i = 0; i < gameManager.candleCount; i++) {
                 var candle = candles['Candle' + i];
                 candle.regen();
@@ -431,6 +433,7 @@ var createScene = async function (engine, canvas, gameManager, candles) {
             }
         } else {
             // resetGame(scene, gameManager, candles);
+            gameInstructions.isVisible = gameManager.isInMenu? true : false;
         }
     });
 
@@ -591,9 +594,17 @@ var updateTimer = function(timer, gameManager) {
         if (gameManager.activeCandlesCount > 0 && !gameManager.isInMenu) {
             let gameOver = advancedTexture.getControlByName("GameOverA");
             gameOver.isVisible = true;
+            let play = gui.getControlByName("PlayButton");
+            play.isVisible = true;
+            let retry = gui.getControlByName("Button_button1");
+            retry.text = "Retry";
         } else if (!gameManager.isInMenu) {
             let gameWin = gui.getControlByName("Win");
+            let play = gui.getControlByName("PlayButton");
+            play.isVisible = true;
             gameWin.isVisible = true;
+            let retry = gui.getControlByName("Button_button1");
+            retry.text = "Replay!";
         }
         window.clearInterval(timer);
     }
@@ -650,7 +661,7 @@ var resetGame = function(scene, gameManager, candles) {
 
 var main = async function () {
     // Main Process
-    let gameManager = new GameManager(candleCount = 10, gameDuration = 300);
+    let gameManager = new GameManager(candleCount = 1, gameDuration = 20);
     gameManager.isGameEnded = true;     // Don't start the game at launch
     var canvas = document.getElementById("render");
     var engine = new BABYLON.Engine(canvas, true);
@@ -710,6 +721,24 @@ var main = async function () {
         ];
         meshNames.forEach(function(meshName) {
             gameManager.shadowGenerators[0].addShadowCaster(scene.getMeshByName(meshName));
+        });
+    }
+
+    // Animation task
+    var animTask = assetsManager.addMeshTask("animTask", "", "./assets/models/", "Clapping.glb", scene);
+    animTask.onSuccess = function(task){
+        //Lock camera on the character 
+        const clapAnim = scene.getAnimationGroupByName("Armature|mixamo.com|Layer0");
+
+        clapAnim.start(true, 1.0, clapAnim.from, clapAnim.to, false);
+        console.log("test");
+        task.loadedMeshes.forEach(function(mesh) {
+            console.log(mesh.position.x);
+            mesh.position.x += 3;
+            mesh.position.z -= 5;
+            mesh.scaling.scaleInPlace(0.09);
+            console.log(mesh.scaling);
+            mesh.name = "Animation";
         });
     }
 
@@ -864,7 +893,8 @@ var main = async function () {
         // console.log(tasks);
         var cake = scene.getMeshByName("Cake");
         // cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
-
+        // var anim = scene.getMeshByName("Animation");
+        // anim.scaling.scaleInPlace(0.1);
         // Remove clutter from table
         // scene.getMeshByName("book_2").dispose();
         // scene.getMeshByName("book3").dispose();
@@ -923,9 +953,12 @@ var main = async function () {
             let play = gui.getControlByName("PlayButton");
             let gameOver = gui.getControlByName("GameOverA");
             let gameWin = gui.getControlByName("Win");
+            let retry = gui.getControlByName("Button_button1");
+            let gameInstructions = gui.getControlByName("Instructions");
             gameOver.isVisible = false;
             gameWin.isVisible = false;
             button.onPointerDownObservable.add(function(event) {
+                retry.text = "Play";
                 gameTitle.isVisible = true;
                 rectangleMenu.isVisible = true;
                 play.isVisible = true;
@@ -933,6 +966,7 @@ var main = async function () {
                 gameOver.isVisible = false;
                 gameManager.isInMenu = true;
                 gameManager.isGameEnded = true;     // Stop the game
+                gameInstructions.isVisible = true;
             });
             play.onPointerDownObservable.add(function(event) {
                 resetGame(scene, gameManager, candles);
@@ -941,6 +975,9 @@ var main = async function () {
                 play.isVisible = false;
                 button.isVisible = true;
                 gameManager.isInMenu = false;
+                gameWin.isVisible = false;
+                gameOver.isVisible = false;
+                gameInstructions.isVisible = true;
             });
             // Manage bg music control
             let musicImage = gui.getControlByName("MusicIcon");
