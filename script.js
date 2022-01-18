@@ -721,10 +721,23 @@ var main = async function () {
             fireCount++;
             // console.log(fireCount)
             var transformNode = scene.getTransformNodeByName("fireRoot" + fireCount);
-            var material = new BABYLON.StandardMaterial("FireMaterial", scene);
-            material.diffuseColor = new BABYLON.Color4.FromHexString("#FD6304FF");
+            
+            // var material = new BABYLON.StandardMaterial("FireMaterial", scene);
+            // material.diffuseColor = new BABYLON.Color4.FromHexString("#FD6304FF");
+
+            // Apply shaders
+            var shaderMaterial = new BABYLON.ShaderMaterial("shaderMaterial", scene, {
+                vertexElement: "vertexShaderCode",
+                fragmentElement: "fragmentShaderCode",
+            }, {
+                attributes: ["position", "normal", "uv"],
+                uniforms: ["world", "worldView", "worldViewProjection", "view", "projection"]
+            });
+            shaderMaterial.setTexture("textureSampler", new BABYLON.Texture('./assets/models/candle_colors/6.jpg', scene));
+
+
             task.loadedMeshes.forEach(function(mesh) {
-                mesh.material = material;
+                mesh.material = shaderMaterial;
                 mesh.name = 'Fire' + fireCount;
                 // console.log("Fire mesh: " + mesh.name);
                 if (!mesh.parent) {

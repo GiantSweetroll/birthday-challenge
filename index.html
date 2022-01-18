@@ -11,6 +11,8 @@
     <body>
         <canvas id="render" touch-action="none">
             <script type="application/vertexShader" id="vertexShaderCode">
+                // Reference https://www.smashingmagazine.com/2016/11/building-shaders-with-babylon-js/
+
                 precision highp float;
 
                 // Attributes
@@ -36,6 +38,8 @@
                 }
             </script>
             <script type="application/fragmentShader" id="fragmentShaderCode">
+                // Reference https://www.smashingmagazine.com/2016/11/building-shaders-with-babylon-js/
+                
                 precision highp float;
 
                 // Varying
@@ -63,12 +67,12 @@
                     vec3 color = texture2D(textureSampler, vUV).rgb;
                     
                     // diffuse
-                    float ndl = max(0., dot(vNormalW, lightVectorW));
+                    float ndl = max(0.5, dot(vNormalW, lightVectorW));
                     
                     // Specular
                     vec3 angleW = normalize(viewDirectionW + lightVectorW);
                     float specComp = max(0., dot(vNormalW, angleW));
-                    specComp = pow(specComp, max(1., 64.)) * 2.;
+                    specComp = pow(specComp, max(1., 64.)) * 0.05;
                     
                     gl_FragColor = vec4(color * ndl + vec3(specComp), 1.);
                 }
