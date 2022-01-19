@@ -110,8 +110,27 @@ Optional requirements:
 
 <!-- USAGE EXAMPLES -->
 ## Usage
+By opening the `index.html` with your web browser. You will be greeted by the following menu
 
+<div align="center">
+  <img src="./screenshots/mainmenu.png">
+</div>
 
+Read the on-screen instructions and proceed by clicking the play button!
+
+<div align="center">
+  <img src="./screenshots/gameplay.png">
+</div>
+
+As soon as the play button is pressed, the game will immediately begin and the timer will start counting down. Blow out all the birthday candles before the timer runs out! There is also a menu button that brings you back to the previous menu where you can restart the game.
+
+<div align="center">
+  <img src="./screenshots/victory.png">
+</div>
+
+When all of the candles have been blown out you have won the game! You can click the replay button to immediately begin playing again.
+
+A video demo of the game can be seen [here](https://youtu.be/pxl-9C5JjLg).
 
 <!-- MEMBERS -->
 ## Contributors
@@ -133,6 +152,7 @@ Project Link: [https://github.com/GiantSweetroll/birthday-challenge](https://git
 * [David Catuhe](https://www.smashingmagazine.com/2016/11/building-shaders-with-babylon-js/)
 * [ei2h21irh2r](https://clara.io/view/683495a0-ce63-47ee-bde0-7f524b19c192)
 * [Gamefromscratch](https://www.youtube.com/c/gamefromscratch)
+* [Jason Shoumar](https://clara.io/view/378aae56-79d3-404c-9c5e-b1432d916ade)
 * [Live Share](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer)
 * [Plane](https://clara.io/view/169468fb-9ddb-4b31-8eeb-1983a640d5da)
 
