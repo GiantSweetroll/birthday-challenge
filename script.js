@@ -1,21 +1,22 @@
+// Game Manager class, controls several core aspects of the game
 class GameManager {
     constructor(candleCount = 10, gameDuration = 300) {
-        this.isMouseDown = false;
-        this.currentBlowStr = 0;
-        this.maxBlowStr = 100;
-        this.blowStrIncr = 1;
-        this.blowSlider = null;
-        this.gameDuration = gameDuration;
-        this.blowerPos = BABYLON.Vector3.Zero();
-        this.canBlow = true;
-        this.candleCount = candleCount;
-        this.shadowGenerators = [];
-        this.isGameEnded = false;
-        this.activeCandlesCount = this.candleCount;
-        this.guiAdvancedTexture = null;
-        this.timer = null;
-        this.timeLeft = this.gameDuration;
-        this.isInMenu = true;
+        this.isMouseDown = false;       // Flag of whether the mouse is currently pressed down
+        this.currentBlowStr = 0;        // The amount of blow strength the player currently has
+        this.maxBlowStr = 100;          // The maximum amount of blow strength the player has (beyond this point it wont increase)
+        this.blowStrIncr = 1;           // How fast the currentBlowStr increases as mouse is being pressed down
+        this.blowSlider = null;         // The blow slider gui
+        this.gameDuration = gameDuration;   // The duration of the game in seconds
+        this.blowerPos = BABYLON.Vector3.Zero();        // Unused
+        this.canBlow = true;                // Flag if the player can blow
+        this.candleCount = candleCount;     // Amount of candles in the game to spawn
+        this.shadowGenerators = [];         // List of ShadowGenerator
+        this.isGameEnded = false;           // Flag that tells the state of the game
+        this.activeCandlesCount = this.candleCount;     // Amount of candles left who still have flame
+        this.guiAdvancedTexture = null;         // The Babylon GUI Advanced Texture
+        this.timer = null;                  // Timer
+        this.timeLeft = this.gameDuration;     // Amount of time left
+        this.isInMenu = true;           // State whether the player is in the menu or not
     }
 
     // Increases the blow strength
@@ -41,6 +42,7 @@ class GameManager {
         this.activeCandlesCount = this.candleCount;
     }
 
+    // Method to show or hide the gameplay UI
     showGameplayWidgets(isVisible) {
         this.guiAdvancedTexture.getControlByName("MusicIcon").isVisible = isVisible;
         this.guiAdvancedTexture.getControlByName("Ellipse").isVisible = isVisible;
@@ -51,11 +53,17 @@ class GameManager {
     }
 }
 
+// Class used to identify the Cake's material
 class CakeMaterial {
 
     static objectName = "cakeMaterial";
     static texturePath = "./assets/models/Cake/textures/";
 
+    /**
+     * Randomize the Cake's material
+     * @param {BABYLON.Scene} scene 
+     * @returns 
+     */
     static random(scene) {
         var num = Math.floor(getRandomArbitrary(0, 5));
 
@@ -77,6 +85,11 @@ class CakeMaterial {
         }
     }
 
+    /**
+     * Vanilla cream texture
+     * @param {BABYLON.Scene} scene 
+     * @returns 
+     */
     static vanillaCream(scene) {
         let textureName = "rFrosting_Vanilla_highres.png";
         let normalTextureName = "vanilla_normal.png";
@@ -89,6 +102,11 @@ class CakeMaterial {
         return material;
     }
 
+    /**
+     * Vanilla cream texture (variant 2)
+     * @param {BABYLON.Scene} scene 
+     * @returns 
+     */
     static vanillaCream2(scene) {
         let textureName = "rFrosting_Vanilla_highres.png";
         let normalTextureName = "vanilla_normal.png";
@@ -103,6 +121,11 @@ class CakeMaterial {
         return material;
     }
 
+    /**
+     * Sponge cake material
+     * @param {BABYLON.Scene} scene 
+     * @returns 
+     */
     static sponge(scene) {
         let textureName = "juniors-sponge-cake-crust.jpg";
         let normalTextureName = "spongecake_normal.png";
@@ -115,6 +138,11 @@ class CakeMaterial {
         return material;
     }
 
+    /**
+     * Sponge cake material (variant 2)
+     * @param {BABYLON.Scene} scene 
+     * @returns 
+     */
     static sponge2(scene) {
         let textureName = "juniors-sponge-cake-crust.jpg";
         let normalTextureName = "spongecake_normal.png";
@@ -129,6 +157,11 @@ class CakeMaterial {
         return material;
     }
 
+    /**
+     * Sponge cake material (variant 3)
+     * @param {BABYLON.Scene} scene 
+     * @returns 
+     */
     static sponge3(scene) {
         let textureName = "juniors-sponge-cake-crust.jpg";
         let normalTextureName = "spongecake_normal.png";
@@ -144,16 +177,25 @@ class CakeMaterial {
     }
 }
 
+// Class that holds information regarding a Candle instance
 class Candle {
+
+    /**
+     * Candle class constructor
+     * @param {string} name - Key that identifies the candle
+     * @param {BABYLON.TransformNode} meshGroup - TransformNode that groups the Candle's meshes
+     * @param {int} maxThreshold - HP of the candle's fire
+     */
     constructor(name, meshGroup, maxThreshold = 100) {
-        this.isLit = true;
-        this.maxThreshold = maxThreshold;
-        this.currentStrength = this.maxThreshold;
+        this.isLit = true;      // Flag if the candle still has fire
+        this.maxThreshold = maxThreshold;   // HP of the candle's fire
+        this.currentStrength = this.maxThreshold;      // Amount of HP left for the candle's fire
         this.regenRate = 0.1;      // Increases the candle strength by this value every frame
         this.candleMeshGroup = meshGroup;
         this.name = name;
     }
 
+    // Blow the candle
     blow(blowStr) {
         this.currentStrength -= blowStr;
 
@@ -163,6 +205,7 @@ class Candle {
         }
     }
 
+    // Regenerate HP for the candle's fire
     regen() {
         if (this.currentStrength > 0 && this.currentStrength < this.maxThreshold) {
             this.currentStrength += this.regenRate;
@@ -217,6 +260,7 @@ function moveBlower(blower, mousex, mousey, scene) {
     blower.position = pickResult.ray.origin;
 }
 
+// Unused
 function blow(blower, cake, camera, scene) {
     cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
     // Cast a ray to the cake
@@ -254,25 +298,34 @@ function blow(blower, cake, camera, scene) {
     }
 }
 
+// Unused
 function vecToLocal(vector, mesh){
     var m = mesh.getWorldMatrix();
     var v = BABYLON.Vector3.TransformCoordinates(vector, m);
     return v;		 
 }
 
+/**
+ * Create the scene
+ * @param {*} engine 
+ * @param {*} canvas 
+ * @param {GameManager} gameManager 
+ * @param {*} candles - Dictionary of Candle objects
+ * @returns 
+ */
 var createScene = async function (engine, canvas, gameManager, candles) {
     var scene = new BABYLON.Scene(engine);
     scene.gravity = new BABYLON.Vector3(0, -0.1, 0);
     scene.collisionsEnabled = true;
     
     // Create TransformNode
-    var cakeTransformNode = new BABYLON.TransformNode("cakeRoot", scene);
+    var cakeTransformNode = new BABYLON.TransformNode("cakeRoot", scene);       // Cake
     for (var i=0; i<gameManager.candleCount; i++) {
-        var candleTransformNode = new BABYLON.TransformNode("Candle" + i, scene);
+        var candleTransformNode = new BABYLON.TransformNode("Candle" + i, scene);       // Candle
     }
 
     for (var i=0; i<gameManager.candleCount; i++) {
-        var fireRoot = new BABYLON.TransformNode("fireRoot" + i, scene);
+        var fireRoot = new BABYLON.TransformNode("fireRoot" + i, scene);        // Fire
     }
     
     // Initialize audio
@@ -290,57 +343,66 @@ var createScene = async function (engine, canvas, gameManager, candles) {
     blowSlider.displayThumb = false;
     blowSlider.value = 0;
 
+    // Initialize timer with a value
     let timerTextBlock = advancedTexture.getControlByName("Timer");
     timerTextBlock.text = convertTimeToString(gameManager.timeLeft);
 
     gameManager.blowSlider = blowSlider;
 
+    // Unused
     var blower = BABYLON.Mesh.CreateBox("Blower", 0.25, scene);
     blower.isPickable = false;
     blower.position = new BABYLON.Vector3(2, 1, 0);
     blower.isVisible = false;
 
+    // Register click events
     scene.onPointerObservable.add((pointerInfo) => {
         switch (pointerInfo.type) {
             case BABYLON.PointerEventTypes.POINTERDOWN:
                 // console.log("POINTER DOWN");
-                gameManager.isMouseDown = true;
+                gameManager.isMouseDown = true; // Update mouse state
                 // moveBlower(blower, scene.pointerX, scene.pointerY, scene);
                 break;
             case BABYLON.PointerEventTypes.POINTERUP:
                 // console.log("POINTER UP");
-                gameManager.isMouseDown = false;
+                gameManager.isMouseDown = false;    // Update mouse state
 
                 if (gameManager.canBlow && !gameManager.isGameEnded) {
                     var cake = scene.getMeshByName("Cake");
                     // blow(blower, cake, camera, scene);
 
+                    // Prevent player from being able to cast another blow before slider resets
                     gameManager.canBlow = false;
 
                     // Play blow audio
                     blowAudio.setVolume((gameManager.currentBlowStr / 20) - 1);       
                     blowAudio.play();
 
+                    // Get object picked by the player
                     pickingInfo = scene.pick(pointerInfo.event.x, pointerInfo.event.y);
                     pickedMesh = pickingInfo.pickedMesh;
                     if (pickedMesh != null) {
                         // let meshKey = pickedMesh.name.substring(0, 7);
                         // console.log(meshKey);
-                        console.log(pickedMesh.name);
+                        // console.log(pickedMesh.name);
                         if (pickedMesh.name.includes("Fire")) {
                             let key = pickedMesh.name.substring(4); // This is a number (i.e. 1, 4, 5)
                             // console.log(key);
-
+                            
+                            // Get candle instance
                             var candle = candles['Candle' + key];
                             if (candle.isLit) {
                                 candle.blow(gameManager.currentBlowStr);
 
+                                // Get the ratio of the candle's flame HP from its max threshold
                                 let strengthRatio = candle.currentStrength / candle.maxThreshold;
 
+                                // Update the scaling of the fire based on the candle's fire HP
                                 var fireRoot = scene.getTransformNodeByName('fireRoot' + key);
                                 fireRoot.scaling.x = 1 * strengthRatio;
                                 fireRoot.scaling.z = 1 * strengthRatio;
 
+                                // If candle strength is 0, update active candle count
                                 if (candle.currentStrength == 0) {
                                     gameManager.activeCandlesCount -= 1;
 
@@ -366,19 +428,8 @@ var createScene = async function (engine, canvas, gameManager, candles) {
 
     engine.enableOfflineSupport = false;
 
-    // var cake = BABYLON.Mesh.CreateBox("FakeCake", 1.0, scene);
-    // cake.position = BABYLON.Vector3.Zero();
-    // cake.isPickable = false;
-
     var camera = createCamera(scene, canvas);
 
-    // var light = new BABYLON.PointLight(
-    //     "pointLight",
-    //     new BABYLON.Vector3(0, 20, 0),
-    //     scene
-    // );
-    // // light.parent = camera;
-    // light.intensity = 0.5;
     // Hemispheric light
     var hemLight = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(0, 1, 0), scene);
     hemLight.intensity = 0.5;
@@ -386,56 +437,32 @@ var createScene = async function (engine, canvas, gameManager, candles) {
     var pointLight = new BABYLON.PointLight('pointLight', new BABYLON.Vector3(0, 30, -15), scene);
     pointLight.radius = 100;
 
-    // Table pos: new BABYLON.Vector3(3, 5.75, 5);
-
-    // var light = new BABYLON.SpotLight(
-    //     "SpotLight", 
-    //     // new BABYLON.Vector3(-3, 30, -15),
-    //     new BABYLON.Vector3(-15, 30, 10),
-    //     new BABYLON.Vector3(
-    //         BABYLON.Tools.ToRadians(90), 
-    //         BABYLON.Tools.ToRadians(-80), 
-    //         BABYLON.Tools.ToRadians(0)
-    //     ),
-    //     BABYLON.Tools.ToRadians(45),
-    //     1,
-    //     scene
-    // );
-    // light.intensity = 0.5;
-    // light.position = new BABYLON.Vector3(0, 10, 0);
-
+    // Used to know where the light is (for debugging purposes)
     var lightSphere = BABYLON.Mesh.CreateSphere("lightSphere", 10, 2, scene);
     lightSphere.position = pointLight.position;
     lightSphere.material = new BABYLON.StandardMaterial("lightSphere", scene);
     lightSphere.material.emissiveColor = new BABYLON.Color3(1, 1, 0);
 
+    // Initialize shadow generator
     var shadowGenerator = new BABYLON.ShadowGenerator(1024, pointLight);
     shadowGenerator.usePercentageCloserFiltering = true;
     shadowGenerator.useContactHardeningShadow = true;
     shadowGenerator.useExponentialShadowMap = false;
     gameManager.shadowGenerators[0] = shadowGenerator;
 
-    // var shadowGenerator2 = new BABYLON.ShadowGenerator(1024, light);
-    // shadowGenerator2.usePercentageCloserFiltering = true;
-    // // shadowGenerator2.useContactHardeningShadow = true;
-    // shadowGenerator2.useExponentialShadowMap = false;
-    // gameManager.shadowGenerators[1] = shadowGenerator2;
-
-    // var box = BABYLON.Mesh.CreateBox('', 0.5, scene);
-    // box.scaling.y = 1;
-    // box.position = new BABYLON.Vector3(3, 7, 5);
-    // gameManager.shadowGenerator.addShadowCaster(box);
-
+    // Register events before frame render
     scene.registerBeforeRender(function () {
         // light.position = camera.position;
         let gameInstructions = gameManager.guiAdvancedTexture.getControlByName("Instructions");
         let gameInstructions2 = gameManager.guiAdvancedTexture.getControlByName("Instructions2");
         if (!gameManager.isGameEnded) {
+            // Show game instructions
             gameInstructions.isVisible = true;
             gameInstructions2.isVisible = true;
             for (var i = 0; i < gameManager.candleCount; i++) {
+                // Regenerate candle's fire HP and the fire's scaling as well
                 var candle = candles['Candle' + i];
-                candle.regen();
+                candle.regen();     
                 let strengthRatio = candle.currentStrength / candle.maxThreshold;
     
                 var fireRoot = scene.getTransformNodeByName('fireRoot' + i);
@@ -443,7 +470,7 @@ var createScene = async function (engine, canvas, gameManager, candles) {
                 fireRoot.scaling.z = 1 * strengthRatio;
             }
         } else {
-            // resetGame(scene, gameManager, candles);
+            // Update game instructions visibility
             gameInstructions.isVisible = gameManager.isInMenu? true : false;
             gameInstructions2.isVisible = gameManager.isInMenu? true : false;
         }
@@ -451,6 +478,7 @@ var createScene = async function (engine, canvas, gameManager, candles) {
         gameManager.showGameplayWidgets(!gameManager.isInMenu);
     });
 
+    // Initialize timer
     var timer = window.setInterval(() => {
         updateTimer(timer, gameManager);
     }, 1000);
@@ -461,6 +489,12 @@ var createScene = async function (engine, canvas, gameManager, candles) {
     return scene;
 }
 
+/**
+ * Initialize camera
+ * @param {*} scene 
+ * @param {*} canvas 
+ * @returns BABYLON.ArcRotateCamera instance
+ */
 var createCamera = function (scene, canvas) {
     var camera = new BABYLON.ArcRotateCamera(
         "camera",
@@ -486,7 +520,6 @@ var createCamera = function (scene, canvas) {
     camera.keysLeft.push(65);   // A
     camera.keysRight.push(68);  // D
     
-    // console.log(camera.inputs.attached);
     // Deactivate mouse control on camera
     camera.inputs.attached.pointers.detachControl();
     // Deactivate mousewheel control
@@ -504,50 +537,26 @@ var createCamera = function (scene, canvas) {
 var positionCandles = function(candles, scene, padding = 0.1) {
     let cakeRoot = scene.getTransformNodeByName("cakeRoot");
     let upperCream = scene.getMeshByName("upperCream");
+    // Get the dimensions of the cake's upper cream
     let upperCreamDims = upperCream.getBoundingInfo().boundingBox.extendSize;
     upperCreamDims = new BABYLON.Vector3(
         upperCreamDims.x * cakeRoot.scaling.x,
         upperCreamDims.y * cakeRoot.scaling.y,
         upperCreamDims.z * cakeRoot.scaling.z
     );
-    // console.log(cakeDims);
-    // upperCreamDims.showBoundingBox = true;
+    // Get cake position
     let cakePosition = upperCream.getAbsolutePosition();
-    // console.log(cakePosition);
+
+    // Attempt to position candles
     for (var i = 0; i < Object.keys(candles).length; i++) {
         var key = "Candle" + i;
-        // var candleRoot = scene.getTransformNodeByName(key);
         var candle = scene.getMeshByName(key + '_Material1');
-        // var candle = scene.getMeshByName(key);
-        // candle.showBoundingBox = true;
-        // candle.scaling = new BABYLON.Vector3(0.1, 0.25, 0.1);
         var candleDims = candle.getBoundingInfo().boundingBox.extendSize;
-        // candleDims.x *= candleRoot.scaling.x;
-        // candleDims.y *= candleRoot.scaling.y;
-        // candleDims.z *= candleRoot.scaling.z;
-        // console.log(candleDims);
 
-        // fireRoot.position.y = candleDims.y;
-
-        // fireRoot._children.forEach(function(element) {
-        //     element.position = candle.getAbsolutePosition();
-        // });
-
-        // minBoundaries = new BABYLON.Vector3(
-        //     cakePosition.x - upperCreamDims.x + padding,
-        //     cakePosition.y + candleDims.y,
-        //     cakePosition.z - upperCreamDims.z + padding
-        // )
-        // maxBoundaries = new BABYLON.Vector3(
-        //     cakePosition.x + upperCreamDims.x - padding,
-        //     cakePosition.y + candleDims.y,
-        //     cakePosition.z + upperCreamDims.z - padding
-        // )
-
+        // Continue to try position candles randomly until there is no conflict
         collisionCheck:
         while (true) {
             // Set position of meshes
-            // let r = upperCreamDims.x - padding - candleDims.x;
             let r = getRandomArbitrary(0, upperCreamDims.x - padding - candleDims.x);
             let theta = getRandomArbitrary(0, 2 * Math.PI);
             var newPos = new BABYLON.Vector3(
@@ -555,16 +564,15 @@ var positionCandles = function(candles, scene, padding = 0.1) {
                 cakePosition.y + candleDims.y + 1,
                 r * Math.sin(theta) + cakePosition.z
             );
-            // console.log(candles[key].candleMeshGroup);
+
+            // Update candle positions
             var transformNode = candles[key].candleMeshGroup;
             transformNode.position = newPos;
             transformNode.computeWorldMatrix();
             // Update position of mesh children
             transformNode._children.forEach(function(mesh) {
                 mesh.computeWorldMatrix();
-                // console.log(mesh.getAbsolutePosition());
             });
-            // console.log(transformNode.name + ': ' + transformNode.position);
 
             // Position fire
             let fireRoot = scene.getTransformNodeByName("fireRoot" + i);
@@ -576,7 +584,6 @@ var positionCandles = function(candles, scene, padding = 0.1) {
                 c = scene.getMeshByName(key2);
                 if (c.name != key) {
                     if (candle.intersectsMesh(c, true)) {
-                        console.log('Collision!');      // TODO: Remove during production phase
                         // Randomize the candle position again
                         continue collisionCheck;
                     }
@@ -596,15 +603,18 @@ var updateTimer = function(timer, gameManager) {
     let gui = gameManager.guiAdvancedTexture;
     let timerTextBlock = gui.getControlByName("Timer");
 
+    // If game hasn't ended, reduce the timer
     if (!gameManager.isGameEnded) {
         gameManager.timeLeft--;
-        // console.log('Time left in seconds: ' + gameManager.timeLeft);
         timerTextBlock.text = convertTimeToString(gameManager.timeLeft);
     }
 
+    // Stop timer if game has ended
     if (gameManager.timeLeft <= 0 || gameManager.isGameEnded) {
         gameManager.isGameEnded = true;
         let advancedTexture = gameManager.guiAdvancedTexture;
+
+        // Update which GUI elements to display/hide
         if (gameManager.activeCandlesCount > 0 && !gameManager.isInMenu) {
             let gameOver = advancedTexture.getControlByName("GameOverA");
             gameOver.isVisible = true;
@@ -620,18 +630,25 @@ var updateTimer = function(timer, gameManager) {
             let retry = gui.getControlByName("Button_button1");
             retry.text = "Replay!";
         }
+
+        // Clear timer
         window.clearInterval(timer);
     }
 
 }
 
-// Resets the game
+/**
+ * Reset the game state
+ * @param {*} scene 
+ * @param {GameManager} gameManager
+ * @param {*} candles - Dictionary of Candle objects
+ */
 var resetGame = function(scene, gameManager, candles) {
     var cake = scene.getMeshByName('Cake');
     var cakeLower = scene.getMeshByName('Cylinder');
 
+    // Randomize cake material
     var cakeMat = CakeMaterial.random()
-    
     cake.material = cakeMat
     cakeLower.material = cakeMat;
 
@@ -674,7 +691,6 @@ var resetGame = function(scene, gameManager, candles) {
 }
 
 var main = async function () {
-    // Main Process
     let gameManager = new GameManager(candleCount = 10, gameDuration = 300);
     gameManager.isGameEnded = true;     // Don't start the game at launch
     var canvas = document.getElementById("render");
@@ -738,20 +754,19 @@ var main = async function () {
         });
     }
 
-    // Animation task
+    // Load animation task
     var animTask = assetsManager.addMeshTask("animTask", "", "./assets/models/", "Clapping.glb", scene);
-    animTask.onSuccess = function(task){
-        //Lock camera on the character 
+    animTask.onSuccess = function(task) {
         const clapAnim = scene.getAnimationGroupByName("Armature|mixamo.com|Layer0");
 
+        // Start the animation
         clapAnim.start(true, 1.0, clapAnim.from, clapAnim.to, false);
-        console.log("test");
+
+        // Update mesh position and scaling
         task.loadedMeshes.forEach(function(mesh) {
-            console.log(mesh.position.x);
             mesh.position.x += 3;
             mesh.position.z -= 5;
             mesh.scaling.scaleInPlace(0.09);
-            console.log(mesh.scaling);
             mesh.name = "Animation";
         });
     }
@@ -762,7 +777,6 @@ var main = async function () {
         var fireTask = assetsManager.addMeshTask("fireTask" + a, "", "./assets/models/", "Fire.obj");
         fireTask.onSuccess = function(task) {
             fireCount++;
-            // console.log(fireCount)
             var transformNode = scene.getTransformNodeByName("fireRoot" + fireCount);
             
             // var material = new BABYLON.StandardMaterial("FireMaterial", scene);
@@ -778,7 +792,7 @@ var main = async function () {
             });
             shaderMaterial.setTexture("textureSampler", new BABYLON.Texture('./assets/models/candle_colors/6.jpg', scene));
 
-
+            // Apply material to meshes
             task.loadedMeshes.forEach(function(mesh) {
                 mesh.material = shaderMaterial;
                 mesh.name = 'Fire' + fireCount;
@@ -802,17 +816,13 @@ var main = async function () {
             mesh.receiveShadows = true;
 
             let name = mesh.name;
-            gameManager.shadowGenerators[0].addShadowCaster(mesh);
-            // console.log("before if");
+            gameManager.shadowGenerators[0].addShadowCaster(mesh);      // Allow shadow casting
+
+            // Update material names and texture material
             if (name.includes("Cylinder")) {
                 mesh.material = cakeMat;
-                // console.log("reached if");
                 if (name == "Cylinder1") {
-                    // console.log("reached cylinder");
                     mesh.name = "Cake";
-                    // mesh.receiveShadows = true;
-                    // mesh.showBoundingBox = true;
-                    // console.log(mesh.getAbsolutePosition());
                 }
             } else {
                 var material = new BABYLON.StandardMaterial("ringMaterial", scene);
@@ -856,43 +866,26 @@ var main = async function () {
                 // gameManager.shadowGenerators[0].addShadowCaster(mesh);
                 // console.log("Name: " + mesh.name);
 
+                // Update mesh texture material and name
                 if (mesh.name.includes('Candle') && mesh.name.includes('Material')) {
                     var material = new BABYLON.StandardMaterial("material", scene);
-                    var num = Math.floor(getRandomArbitrary(1, 6));     // Randomize texture
-                    // material.diffuseTexture = new BABYLON.Texture("./assets/models/candle_colors/" + num + ".jpg", scene);
                     material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
                     mesh.material = material;
                     mesh.name = mesh.name.includes('006')? name + '_Material1' : name + '_Material2';
                 } else if (mesh.name.includes('Fuse')) {
                     mesh.name = name + "_Fuse" + mesh.name.includes('Material')? '_Material' : '';
-                    // console.log(mesh.name);
                 } else {
                     mesh.name = name;
                 }
 
-                // if (mesh.name == 'Candle') {
-                //     console.log(mesh.material);
-                //     // console.log(JSON.stringify(mesh.material));
-                // }
-
                 mesh.isPickable = true;
-                // mesh.name = mesh.name == 'Candle'? name : mesh.name + loadedCandlesCount;
 
                 if (!mesh.parent) {
                     mesh.parent = transformNode;
                 }
-
-                // mesh.position = new BABYLON.Vector3(3, 5.8, 5);
             }
 
-            // transformNode.scaling = new BABYLON.Vector3(
-            //     0.1,
-            //     0.25,
-            //     0.1
-            // );
-
             // Create Candle object
-            // console.log(transformNode);
             var candleObject = new Candle(
                 name,
                 transformNode
@@ -903,17 +896,11 @@ var main = async function () {
         }
     }
 
+    // Set callback after asset loading has finished
     assetsManager.onFinish = function(tasks) {
-        // console.log(tasks);
         var cake = scene.getMeshByName("Cake");
-        // cakeDims = cake.getBoundingInfo().boundingBox.extendSize;
-        // var anim = scene.getMeshByName("Animation");
-        // anim.scaling.scaleInPlace(0.1);
-        // Remove clutter from table
-        // scene.getMeshByName("book_2").dispose();
-        // scene.getMeshByName("book3").dispose();
-        // scene.getMeshByName("book4").dispose();
-        // scene.getMeshByName("mesh_mm1").dispose();
+
+        // Remove obstructing mesh on the table
         scene.getMeshByName("decoration_set_002").dispose();
 
         // Update camera position
@@ -925,31 +912,7 @@ var main = async function () {
 
         // Position candles
         positionCandles(candles, scene);
-        // // Fire!
-        // BABYLON.ParticleHelper.CreateAsync("fire", scene,false).then((set) => {
-        //     const candlenames = [];
-        // for(var i = 0; i <= loadedCandlesCount; i++){            
-        //     candlenames[i] = "Candle" + i.toString()   
-        // }   
-        //     // var candle = scene.getMeshByName("Candle");
-        //     console.log(candle);
-        //     console.log(candle.getAbsolutePosition());
-        //     console.log(set.systems[0]);
-        //     for(var i = 0; i < set.systems.length;i++){
-        //         candle = scene.getMeshByName(candlenames[i]);
-        //         set.systems[i].emitter = candle;
-        //         set.systems[i].maxSize = 1;
-        //         set.systems[i].minSize = 1;
-        //         // set.systems[i].maxScaleY = 0.2;
-        //         // set.systems[i].maxScaleX = 0.2;
-        //         // set.systems[i].minScaleY = 0.2;
-        //         // set.systems[i].minScaleX = 0.2;
-        //         set.systems[i].worldOffset.y = 0.8;
-        //     }
-        //     set.emitter = candle;
-        //     set.start();
-        
-        // });
+
         // Play background music
         var bgMusic = new BABYLON.Sound("bgMusic", "./assets/sound/happybirthday.ogg", scene, null, {
             loop: true,
@@ -973,6 +936,9 @@ var main = async function () {
             let menuRectangle = gui.getControlByName("RectangleMenu");
             gameOver.isVisible = false;
             gameWin.isVisible = false;
+
+            // Register events when GUI button is pressed
+            // Menu button is pressed
             button.onPointerDownObservable.add(function(event) {
                 retry.text = "Play";
                 gameTitle.isVisible = true;
@@ -985,6 +951,8 @@ var main = async function () {
                 gameInstructions.isVisible = true;
                 gameInstructions2.isVisible = true;
             });
+
+            // Play button is pressed
             play.onPointerDownObservable.add(function(event) {
                 resetGame(scene, gameManager, candles);
                 gameTitle.isVisible = false;
@@ -997,10 +965,12 @@ var main = async function () {
                 gameInstructions.isVisible = true;
                 gameInstructions2.isVisible = true;
             });
+
             // Manage bg music control
             let musicImage = gui.getControlByName("MusicIcon");
             let ellipse = gui.getControlByName("Ellipse");
             var musicOn = true;
+            // Mute/unmute background music when control is clicked
             musicImage.onPointerDownObservable.add(function(event) {
                 musicOn = !musicOn;
                 bgMusic.setVolume(musicOn? 1 : 0);
@@ -1016,12 +986,12 @@ var main = async function () {
         // Run engine loop
         engine.runRenderLoop(function () {
             if (!gameManager.isGameEnded) {
-                // console.log(gameManager.currentBlowStr);
                 if (gameManager.isMouseDown && gameManager.canBlow) {
-                    gameManager.increaseBlowStr();
+                    gameManager.increaseBlowStr();      // Increase player's blow strength
                 } else {
-                    gameManager.decreaseBlowStr();
+                    gameManager.decreaseBlowStr();      // Decrease player's blow strength if mouse is not held
                 }
+                // Update blow slider
                 gameManager.blowSlider.value = gameManager.currentBlowStr;
 
                 // Can only blow when slider reaches 0 again
