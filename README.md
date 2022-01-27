@@ -110,7 +110,7 @@ Optional requirements:
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-By opening the `index.html` with your web browser. You will be greeted by the following menu
+Open the `index.html` with your web browser. You will be greeted by the following menu
 
 <div align="center">
   <img src="./screenshots/mainmenu.png">
